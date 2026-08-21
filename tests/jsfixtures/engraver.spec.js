@@ -76,6 +76,18 @@ const run = async () => {
     assert.ok(typeof midi === 'string' && midi.length > 0, 'MIDI produced');
     assert.ok(Buffer.from(midi, 'base64').subarray(0, 4).toString() === 'MThd', 'valid MIDI header');
 
+    // Verovio aborts inside WebAssembly on unreadable ABC rather than returning false, and the
+    // raw exception ("null function or function signature mismatch") is meaningless to an
+    // author, so the adapter owns one message for every failure route.
+    for (const bad of ['not a tune', '', 'X:1']) {
+        await assert.rejects(
+            () => render(bad, 'abc', {}),
+            /local_sheetmusic: the engraver could not read this score/,
+            `unreadable input ${JSON.stringify(bad)} fails with our message, not the engine's`
+        );
+    }
+    assert.ok((await render(FIXTURE, 'abc', {})).svg.includes('<svg'), 'and the toolkit survives the abort');
+
     window.console.log(`engraver.spec: OK (Verovio ${engine}, 8 notes, MusicXML in, MIDI out)`);
 };
 

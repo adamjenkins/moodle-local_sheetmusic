@@ -73,6 +73,9 @@ const inputFormat = (format) => {
             return 'abc';
         case 'musicxml':
             return 'musicxml';
+        case 'mxl':
+            // The zip entry point unpacks to MusicXML, so this is the format Verovio then sees.
+            return 'musicxml';
         default:
             return 'auto';
     }
@@ -146,6 +149,39 @@ const buildIdMap = (svg) => {
 };
 
 /**
+ * Load a source into a toolkit, choosing the entry point the format needs.
+ *
+ * Compressed MusicXML is the one format that cannot go through loadData(): a `.mxl` is a ZIP,
+ * and handing ZIP bytes to loadData() fails cleanly rather than unpacking them, so it has its
+ * own entry point and its own source type. Measured in P0-FINDINGS-T2 section 6.1.
+ *
+ * @param {object} toolkit A ready toolkit.
+ * @param {string} source The score source: text, or base64 for the mxl format.
+ * @param {string} format The stored format token.
+ * @returns {void}
+ * @throws {Error} If the engine cannot read the source.
+ */
+const loadInto = (toolkit, source, format) => {
+    let loaded = false;
+    try {
+        loaded = format === 'mxl'
+            ? toolkit.loadZipDataBase64(source)
+            : toolkit.loadData(source);
+    } catch (error) {
+        // Verovio's ABC importer does not return false on unreadable input: it aborts inside
+        // WebAssembly, and the exception that escapes says "null function or function signature
+        // mismatch" (measured on 6.3.0 in node and in Chromium alike, for "not a tune", for an
+        // empty string, and for a header with no music line). Letting that reach an author would
+        // be meaningless, so every failure route is folded into one message here. The toolkit
+        // itself survives the abort - the next valid render works - so nothing is torn down.
+        loaded = false;
+    }
+    if (!loaded) {
+        throw new Error('local_sheetmusic: the engraver could not read this score');
+    }
+};
+
+/**
  * Engrave a score source.
  *
  * @param {string} source The score source.
@@ -158,9 +194,7 @@ const buildIdMap = (svg) => {
 export const render = async (source, format, options = {}) => {
     const toolkit = await getToolkit();
     toolkit.setOptions({...DEFAULT_OPTIONS, ...options, inputFrom: inputFormat(format)});
-    if (!toolkit.loadData(source)) {
-        throw new Error('local_sheetmusic: the engraver could not read this score');
-    }
+    loadInto(toolkit, source, format);
     const svg = toolkit.renderToSVG(1);
     return {svg, idMap: buildIdMap(svg)};
 };
@@ -175,10 +209,26 @@ export const render = async (source, format, options = {}) => {
 export const toMidi = async (source, format) => {
     const toolkit = await getToolkit();
     toolkit.setOptions({...DEFAULT_OPTIONS, inputFrom: inputFormat(format)});
-    if (!toolkit.loadData(source)) {
-        throw new Error('local_sheetmusic: the engraver could not read this score');
-    }
+    loadInto(toolkit, source, format);
     return toolkit.renderToMIDI();
+};
+
+/**
+ * Convert a score source to MEI.
+ *
+ * This is what makes importing MusicXML a mapping job rather than a parsing job: Verovio
+ * reads MusicXML and compressed MusicXML natively, and its MEI output is a single regular
+ * shape that every input format collapses onto. See P0-FINDINGS-T2 decision 8.
+ *
+ * @param {string} source The score source: text, or base64 for the mxl format.
+ * @param {string} format The stored format token, including mxl for compressed MusicXML.
+ * @returns {Promise<string>} The score as MEI.
+ */
+export const toMei = async (source, format) => {
+    const toolkit = await getToolkit();
+    toolkit.setOptions({...DEFAULT_OPTIONS, inputFrom: inputFormat(format)});
+    loadInto(toolkit, source, format);
+    return toolkit.getMEI({});
 };
 
 /**

@@ -6,7 +6,9 @@
   "exports": {
     "./abc": "./amd/src/abc.js",
     "./engraver": "./amd/src/engraver.js",
+    "./keys": "./amd/src/keys.js",
     "./model": "./amd/src/model.js",
+    "./musicxml": "./amd/src/musicxml.js",
     "./render": "./amd/src/render.js"
   },
   "devDependencies": {
