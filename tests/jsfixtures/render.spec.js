@@ -18,10 +18,10 @@ setToolkitFactory(() => ({
     },
     renderToSVG() {
         renderCalls++;
-        return '<svg class="fake"><g class="note"/></svg>';
-    },
-    getMEI() {
-        return '<note xml:id="n1" pname="g" oct="4"/><note xml:id="n2" pname="a" oct="4"/>';
+        return '<svg xmlns="http://www.w3.org/2000/svg">'
+            + '<g data-class="note" data-id="n1" data-pname="g" data-oct="4" data-dur="4"/>'
+            + '<g data-class="note" data-id="n2" data-pname="a" data-oct="4" data-dur="4"/>'
+            + '</svg>';
     },
 }));
 

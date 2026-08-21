@@ -16,9 +16,9 @@
 /**
  * Adapter around the bundled Verovio engraver.
  *
- * Everything that knows how Verovio is loaded and called lives here, so that the rest of the
- * suite depends only on the small contract below. The WASM artifact is never touched at page
- * load: it is fetched on the first render and reused afterwards.
+ * Everything that knows how Verovio is loaded and called lives here, so the rest of the suite
+ * depends only on the small contract below. The 7 MB WASM artifact is never touched at page
+ * load: it is imported on the first render and reused for the life of the page.
  *
  * @module     local_sheetmusic/engraver
  * @copyright  2026 Adam Jenkins <adam@wisecat.net>
@@ -34,7 +34,7 @@ let toolkitFactory = null;
 /**
  * Replace the toolkit factory. Intended for unit tests, which have no WASM available.
  *
- * @param {Function|null} factory A function returning a promise for a toolkit, or null to reset.
+ * @param {Function|null} factory Returns a promise for a toolkit, or null to reset.
  * @returns {void}
  */
 export const setToolkitFactory = (factory) => {
@@ -43,7 +43,10 @@ export const setToolkitFactory = (factory) => {
 };
 
 /**
- * Default render options. Kept small and explicit rather than relying on engine defaults.
+ * Options applied to every render.
+ *
+ * svgHtml5 is not cosmetic: it moves Verovio's ids to data-id, so several scores on one page
+ * cannot collide in the document id namespace. Every selector below relies on it.
  *
  * @type {object}
  */
@@ -53,24 +56,55 @@ const DEFAULT_OPTIONS = {
     footer: 'none',
     header: 'none',
     scale: 40,
+    svgHtml5: true,
+    svgAdditionalAttribute: ['note@pname', 'note@oct', 'note@dur'],
+    svgViewBox: true,
 };
 
 /**
- * Map a stored format token to the input format name the engraver expects.
+ * Map a stored format token to Verovio's input format name.
  *
  * @param {string} format A stored format token such as abc or musicxml.
- * @returns {string} The engraver's input format name.
+ * @returns {string} Verovio's input format name.
  */
 const inputFormat = (format) => {
     switch (format) {
         case 'abc':
             return 'abc';
         case 'musicxml':
-        case 'mxl':
             return 'musicxml';
         default:
             return 'auto';
     }
+};
+
+/**
+ * Where the vendored engine lives, as a URL this page can import from.
+ *
+ * @returns {string} A base URL ending in a slash.
+ */
+const engineBase = () => {
+    const wwwroot = (window.M && window.M.cfg && window.M.cfg.wwwroot) || '';
+    return `${wwwroot}/local/sheetmusic/thirdparty/verovio/`;
+};
+
+/**
+ * Load Verovio and build a toolkit.
+ *
+ * @returns {Promise<object>} A ready toolkit.
+ */
+const loadToolkit = async () => {
+    const base = engineBase();
+    const [{default: createVerovioModule}, {VerovioToolkit, enableLog, LOG_OFF}] = await Promise.all([
+        import(`${base}verovio-module.mjs`),
+        import(`${base}verovio.mjs`),
+    ]);
+    const module = await createVerovioModule();
+    const toolkit = new VerovioToolkit(module);
+    // Verovio warns about missing ABC title fields; silence it rather than filling the browser
+    // console on every page that shows a score. enableLog takes the module explicitly.
+    enableLog(LOG_OFF, module);
+    return toolkit;
 };
 
 /**
@@ -80,13 +114,36 @@ const inputFormat = (format) => {
  */
 const getToolkit = () => {
     if (!toolkitPromise) {
-        if (!toolkitFactory) {
-            toolkitPromise = Promise.reject(new Error('local_sheetmusic: no engraver available'));
-        } else {
-            toolkitPromise = Promise.resolve(toolkitFactory());
-        }
+        toolkitPromise = Promise.resolve((toolkitFactory || loadToolkit)());
     }
     return toolkitPromise;
+};
+
+/**
+ * Build the map from rendered element ids back to note identity.
+ *
+ * This is what makes a rendered score clickable without a layout engine of our own. It is
+ * rebuilt on every render, because Verovio ids are regenerated on each loadData() unless
+ * xmlIdChecksum is set, and are never safe to persist.
+ *
+ * @param {string} svg The rendered SVG.
+ * @returns {object} A map of element id to note description.
+ */
+const buildIdMap = (svg) => {
+    const map = {};
+    const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+    doc.querySelectorAll('[data-class="note"]').forEach((note) => {
+        const id = note.getAttribute('data-id');
+        if (!id) {
+            return;
+        }
+        map[id] = {
+            pitch: note.getAttribute('data-pname'),
+            octave: Number(note.getAttribute('data-oct')),
+            duration: Number(note.getAttribute('data-dur')),
+        };
+    });
+    return map;
 };
 
 /**
@@ -94,7 +151,9 @@ const getToolkit = () => {
  *
  * @param {string} source The score source.
  * @param {string} format The stored format token.
- * @param {object} options Engraver options, merged over the defaults.
+ * @param {object} options Engraver options, merged over the defaults. The editor passes
+ *                         xmlIdChecksum so ids stay stable across re-renders; the filter must
+ *                         not, because identical scores on one page would then collide.
  * @returns {Promise<{svg: string, idMap: object}>} The rendered SVG and its element map.
  */
 export const render = async (source, format, options = {}) => {
@@ -104,31 +163,28 @@ export const render = async (source, format, options = {}) => {
         throw new Error('local_sheetmusic: the engraver could not read this score');
     }
     const svg = toolkit.renderToSVG(1);
-    return {svg, idMap: buildIdMap(toolkit)};
+    return {svg, idMap: buildIdMap(svg)};
 };
 
 /**
- * Build the map from rendered element ids back to note identity.
+ * Render a score to a MIDI file.
  *
- * This is what makes a rendered score clickable without a layout engine of our own.
- *
- * @param {object} toolkit A toolkit that has already loaded a score.
- * @returns {object} A map of element id to note description.
+ * @param {string} source The score source.
+ * @param {string} format The stored format token.
+ * @returns {Promise<string>} Base64-encoded MIDI.
  */
-const buildIdMap = (toolkit) => {
-    const map = {};
-    const mei = toolkit.getMEI({});
-    const pattern = /<note\b[^>]*\bxml:id="([^"]+)"[^>]*>/g;
-    let match = pattern.exec(mei);
-    while (match !== null) {
-        const tag = match[0];
-        const pname = /\bpname="([a-g])"/.exec(tag);
-        const oct = /\boct="(\d)"/.exec(tag);
-        map[match[1]] = {
-            pitch: pname ? pname[1] : null,
-            octave: oct ? Number(oct[1]) : null,
-        };
-        match = pattern.exec(mei);
+export const toMidi = async (source, format) => {
+    const toolkit = await getToolkit();
+    toolkit.setOptions({...DEFAULT_OPTIONS, inputFrom: inputFormat(format)});
+    if (!toolkit.loadData(source)) {
+        throw new Error('local_sheetmusic: the engraver could not read this score');
     }
-    return map;
+    return toolkit.renderToMIDI();
 };
+
+/**
+ * The engine version, for diagnostics.
+ *
+ * @returns {Promise<string>} The Verovio version string.
+ */
+export const version = async () => (await getToolkit()).getVersion();
