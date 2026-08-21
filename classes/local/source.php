@@ -106,7 +106,9 @@ final class source {
             if ($metre !== null && $metre !== '') {
                 $parts[] = get_string('scoremetre', 'local_sheetmusic', $metre);
             }
-            if ($bars > 0) {
+            if ($bars === 1) {
+                $parts[] = get_string('scorebar', 'local_sheetmusic');
+            } else if ($bars > 1) {
                 $parts[] = get_string('scorebars', 'local_sheetmusic', $bars);
             }
         } else {

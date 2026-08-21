@@ -68,6 +68,20 @@ final class source_test extends \advanced_testcase {
     }
 
     /**
+     * A single bar is described in the singular.
+     *
+     * @return void
+     */
+    public function test_describe_uses_singular_for_one_bar(): void {
+        $one = source::describe("X:1\nM:4/4\nK:G\n|GABc dedB|", 'abc');
+        $this->assertStringContainsString('1 bar', $one);
+        $this->assertStringNotContainsString('1 bars', $one);
+
+        $two = source::describe("X:1\nM:4/4\nK:G\n|GABc|dedB|", 'abc');
+        $this->assertStringContainsString('2 bars', $two);
+    }
+
+    /**
      * A score with no title still produces a usable description.
      *
      * @return void
