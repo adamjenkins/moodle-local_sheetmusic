@@ -13,13 +13,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+
 /**
- * The editing surface's own DOM: source, live preview, import, export.
+ * The editing surface's own DOM: two tabs over one score, plus import and export.
  *
  * No modal, no buttons bar, no Moodle chrome of any kind - see `editor/index.js` for the
  * contract that keeps it that way. Nothing here reaches outside the container it is given.
  *
- * Three behaviours are requirements rather than choices:
+ * # The two tabs
+ *
+ * **Notes** is the default view, because the editor is for teachers who read music and not
+ * necessarily ABC. It is `editor/notes.js`: click a staff to place a note, or type one.
+ * **Source** is the ABC itself with a live preview beside it. They are two views of one
+ * document and neither is authoritative: a note placed on the staff is serialised to ABC and
+ * appears in the source tab, and ABC typed in the source tab is parsed back into the model the
+ * notes tab edits. The textarea holds the score that will be saved either way.
+ *
+ * Three further behaviours are requirements rather than choices:
  *
  * - a score that does not parse **never blanks the preview**; the last good engraving stays on
  *   screen under the error, because an author correcting a typo needs to see what they had;
@@ -37,7 +47,10 @@ import {ensureParser, fromAbc} from 'local_sheetmusic/abc';
 import {render as engrave} from 'local_sheetmusic/engraver';
 import {EXPORTS} from 'local_sheetmusic/export';
 import {ACCEPT, importBytes, readFile} from 'local_sheetmusic/editor/importing';
-import {GRIDS} from 'local_sheetmusic/midi';
+import {buildMidiPanel} from 'local_sheetmusic/editor/midipanel';
+import {createNotes} from 'local_sheetmusic/editor/notes';
+import {fill, make, offer} from 'local_sheetmusic/editor/dom';
+import {buildTabs} from 'local_sheetmusic/editor/tabs';
 
 /** @type {string} Fired on the container after every preview attempt, good or bad. */
 export const EVENT_PREVIEW = 'local_sheetmusic/editor:preview';
@@ -47,90 +60,6 @@ const DEBOUNCE = 250;
 
 /** @type {number} How many identifiers have been handed out, so labels can be tied to fields. */
 let sequence = 0;
-
-/**
- * Fill a string's {$a} placeholder.
- *
- * @param {string} template The language string.
- * @param {*} value What to put in it.
- * @returns {string} The filled string.
- */
-const fill = (template, value) => String(template || '').replace('{$a}', String(value));
-
-/**
- * Build an element.
- *
- * @param {string} tag The tag name.
- * @param {object} attributes Attributes to set; className and textContent are handled as
- *                            properties so that neither has to be spelled the DOM way here.
- * @param {Element[]} children Elements to append.
- * @returns {Element} The element.
- */
-const make = (tag, attributes = {}, children = []) => {
-    const element = document.createElement(tag);
-    Object.entries(attributes).forEach(([name, value]) => {
-        if (name === 'className' || name === 'textContent' || name === 'value') {
-            element[name] = value;
-        } else if (value !== null && value !== false) {
-            element.setAttribute(name, value === true ? '' : value);
-        }
-    });
-    children.forEach((child) => element.appendChild(child));
-    return element;
-};
-
-/**
- * Offer a blob to the browser as a download.
- *
- * @param {Blob} blob The file.
- * @param {string} filename What to call it.
- * @returns {void}
- */
-const offer = (blob, filename) => {
-    const url = window.URL.createObjectURL(blob);
-    const link = make('a', {href: url, download: filename});
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
-};
-
-/**
- * Build the MIDI adjust panel.
- *
- * @param {object} strings The language strings.
- * @param {string} id A unique prefix for this surface's element ids.
- * @returns {object} The panel and its controls.
- */
-const buildMidiPanel = (strings, id) => {
-    const field = (key, control) => make('div', {className: 'sheetmusic-editor-field'}, [
-        make('label', {for: control.id, textContent: strings[key]}),
-        control,
-    ]);
-    const grid = make('select', {id: `${id}-grid`, className: 'custom-select'});
-    GRIDS.forEach((value) => {
-        grid.appendChild(make('option', {value: String(value), textContent: fill(strings.editorgridvalue, value)}));
-    });
-    grid.value = '16';
-    const metre = make('input', {id: `${id}-metre`, type: 'text', className: 'form-control', size: '5'});
-    const key = make('input', {id: `${id}-key`, type: 'text', className: 'form-control', size: '5'});
-    const transpose = make('input', {
-        id: `${id}-transpose`, type: 'number', className: 'form-control', value: '0', min: '-24', max: '24',
-    });
-    const apply = make('button', {type: 'button', className: 'btn btn-primary', textContent: strings.editorapply});
-    const discard = make('button', {
-        type: 'button', className: 'btn btn-secondary', textContent: strings.editordiscard,
-    });
-    const panel = make('div', {className: 'sheetmusic-editor-midi', hidden: true}, [
-        make('p', {textContent: strings.editorimportmidi}),
-        field('editorgrid', grid),
-        field('editormetre', metre),
-        field('editorkey', key),
-        field('editortranspose', transpose),
-        make('div', {className: 'sheetmusic-editor-actions'}, [apply, discard]),
-    ]);
-    return {panel, grid, metre, key, transpose, apply, discard};
-};
 
 /**
  * Build the editing surface inside a container.
@@ -168,21 +97,8 @@ export const createSurface = (spec) => {
     });
     const midi = buildMidiPanel(strings, id);
 
-    const root = make('div', {className: 'sheetmusic-editor'}, [
-        make('div', {className: 'sheetmusic-editor-toolbar'}, [
-            make('div', {className: 'sheetmusic-editor-field'}, [
-                make('label', {for: file.id, textContent: strings.editorimport}),
-                file,
-            ]),
-            make('div', {className: 'sheetmusic-editor-field'}, [
-                make('label', {for: chooser.id, textContent: strings.editorexport}),
-                chooser,
-                exporter,
-            ]),
-        ]),
-        alert,
-        notes,
-        midi.panel,
+    const notesPanel = make('div', {className: 'sheetmusic-editor-panel'});
+    const sourcePanel = make('div', {className: 'sheetmusic-editor-panel'}, [
         make('div', {className: 'sheetmusic-editor-panes'}, [
             make('div', {className: 'sheetmusic-editor-pane'}, [
                 make('label', {for: textarea.id, textContent: strings.editorsource}),
@@ -196,10 +112,7 @@ export const createSurface = (spec) => {
         ]),
     ]);
 
-    textarea.value = String(spec.source || '');
-    container.appendChild(root);
-
-    const state = {error: null, timer: null, token: 0, imported: null, previous: ''};
+    const state = {error: null, timer: null, token: 0, imported: null, previous: '', synced: null, tab: 'notes'};
 
     /**
      * Show a message in the surface, or clear it.
@@ -244,8 +157,8 @@ export const createSurface = (spec) => {
         }
 
         try {
-            // xmlIdChecksum keeps element ids stable between keystrokes, which is what Phase 3's
-            // hit-testing will need and costs nothing now (P0-FINDINGS-T2 decision 6).
+            // xmlIdChecksum keeps element ids stable between keystrokes, which is what the
+            // note-entry pane's hit-testing needs (P0-FINDINGS-T2 decision 6).
             const {svg} = await engrave(textarea.value, 'abc', {xmlIdChecksum: true});
             if (token !== state.token) {
                 return;
@@ -278,6 +191,95 @@ export const createSurface = (spec) => {
         state.timer = window.setTimeout(draw, wait);
     };
 
+    const pane = createNotes({
+        container: notesPanel,
+        strings,
+        id,
+        onChange: (source) => {
+            // The note-entry pane has just re-serialised the model; the textarea is the same
+            // document in the other notation, so it is updated without being re-parsed back.
+            state.synced = source;
+            textarea.value = source;
+            draw();
+        },
+    });
+
+    /**
+     * Hand the textarea's ABC to the note-entry pane, if it has changed hands since last time.
+     *
+     * @returns {Promise<void>}
+     */
+    const syncNotes = async () => {
+        if (state.synced === textarea.value) {
+            return;
+        }
+        state.synced = textarea.value;
+        await ensureParser();
+        await pane.setSource(textarea.value);
+    };
+
+    const tabs = buildTabs([
+        {name: 'notes', label: strings.editortabnotes, panel: notesPanel},
+        {name: 'source', label: strings.editortabsource, panel: sourcePanel},
+    ], id, (name) => {
+        state.tab = name;
+        if (name === 'notes') {
+            syncNotes();
+        } else {
+            draw();
+        }
+    });
+
+    const root = make('div', {className: 'sheetmusic-editor'}, [
+        make('div', {className: 'sheetmusic-editor-toolbar'}, [
+            make('div', {className: 'sheetmusic-editor-field'}, [
+                make('label', {for: file.id, textContent: strings.editorimport}),
+                file,
+            ]),
+            make('div', {className: 'sheetmusic-editor-field'}, [
+                make('label', {for: chooser.id, textContent: strings.editorexport}),
+                chooser,
+                exporter,
+            ]),
+        ]),
+        alert,
+        notes,
+        midi.panel,
+        tabs.element,
+        notesPanel,
+        sourcePanel,
+    ]);
+
+    textarea.value = String(spec.source || '');
+    container.appendChild(root);
+
+    file.addEventListener('change', async () => {
+        const chosen = file.files && file.files[0];
+        if (!chosen) {
+            return;
+        }
+        say(fill(strings.editorimportreading, chosen.name));
+        state.previous = textarea.value;
+        try {
+            const {name, bytes} = await readFile(chosen);
+            const result = await importBytes(name, bytes, {});
+            textarea.value = result.source;
+            listNotes(result.warnings);
+            state.imported = result.kind === 'midi' ? {name, bytes} : null;
+            midi.panel.hidden = !state.imported;
+            say(null);
+            await draw();
+            await syncNotes();
+            if (state.imported) {
+                midi.grid.focus();
+            }
+        } catch (error) {
+            say(fill(strings.editorimportfailed, error && error.message ? error.message : error));
+        } finally {
+            file.value = '';
+        }
+    });
+
     /**
      * Re-run a MIDI import with whatever the adjust panel currently says.
      *
@@ -297,36 +299,11 @@ export const createSurface = (spec) => {
             textarea.value = result.source;
             listNotes(result.warnings);
             await draw();
+            await syncNotes();
         } catch (error) {
             say(fill(strings.editorimportfailed, error && error.message ? error.message : error));
         }
     };
-
-    file.addEventListener('change', async () => {
-        const chosen = file.files && file.files[0];
-        if (!chosen) {
-            return;
-        }
-        say(fill(strings.editorimportreading, chosen.name));
-        state.previous = textarea.value;
-        try {
-            const {name, bytes} = await readFile(chosen);
-            const result = await importBytes(name, bytes, {});
-            textarea.value = result.source;
-            listNotes(result.warnings);
-            state.imported = result.kind === 'midi' ? {name, bytes} : null;
-            midi.panel.hidden = !state.imported;
-            say(null);
-            await draw();
-            if (state.imported) {
-                midi.grid.focus();
-            }
-        } catch (error) {
-            say(fill(strings.editorimportfailed, error && error.message ? error.message : error));
-        } finally {
-            file.value = '';
-        }
-    });
 
     [midi.grid, midi.metre, midi.key, midi.transpose].forEach((control) => {
         control.addEventListener('change', requantise);
@@ -344,6 +321,7 @@ export const createSurface = (spec) => {
         textarea.value = state.previous;
         listNotes([]);
         await draw();
+        await syncNotes();
     });
 
     exporter.addEventListener('click', async () => {
@@ -358,6 +336,7 @@ export const createSurface = (spec) => {
     });
 
     textarea.addEventListener('input', schedule);
+    tabs.select('notes');
     draw();
 
     return {

@@ -77,3 +77,72 @@
     display: flex;
     gap: 0.5rem;
 }
+
+/* --- The note-entry tab ---------------------------------------------------------------- */
+
+.sheetmusic-editor-tabs {
+    margin-bottom: 0.75rem;
+}
+
+.sheetmusic-editor-notetoolbar {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.sheetmusic-editor-buttons,
+.sheetmusic-editor-settings {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.sheetmusic-editor-key {
+    min-width: 2.75rem;
+}
+
+/* The staff is one focus stop and behaves like a canvas, so the focus ring is the only thing
+   telling a keyboard user that the next letter they type will land on the staff. It must never
+   be suppressed. */
+.sheetmusic-editor-score {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    min-height: 8rem;
+    overflow-x: auto;
+    padding: 0.5rem;
+}
+
+.sheetmusic-editor-score:focus,
+.sheetmusic-editor-score:focus-visible {
+    outline: 3px solid #0f6cbf;
+    outline-offset: 2px;
+}
+
+.sheetmusic-editor-score svg {
+    height: auto;
+    max-width: 100%;
+    min-width: 20rem;
+}
+
+/* Painted with fill only: the engine injects an id-scoped `stroke: currentColor` rule into every
+   SVG it renders, and no rule written here can outrank an id selector. */
+.sheetmusic-editor-selected {
+    fill: rgba(15, 108, 191, 0.3);
+}
+
+.sheetmusic-editor-caret {
+    stroke: #0f6cbf;
+    stroke-linecap: round;
+}
+
+.sheetmusic-editor-status {
+    margin-bottom: 0;
+    min-height: 1.5rem;
+}
+
+.sheetmusic-editor-listing {
+    margin: 0;
+}

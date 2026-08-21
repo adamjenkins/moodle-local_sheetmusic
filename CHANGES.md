@@ -13,8 +13,9 @@ All notable changes to `local_sheetmusic` are documented here.
   `open({source, format, container})` renders into a container the caller supplies and settles
   when the caller dispatches `local_sheetmusic/editor:save` (cancelable — a vetoed dispatch
   means the score does not engrave and the modal must stay open) or
-  `local_sheetmusic/editor:cancel`. It owns no Moodle chrome. v1 offers an ABC source pane, a
-  debounced live preview, file import and file export; point-and-click note entry is Phase 3.
+  `local_sheetmusic/editor:cancel`. It owns no Moodle chrome. It offers file import and file
+  export, and two tabs over one document: note entry and an ABC source pane with a debounced
+  live preview.
 - Added MusicXML import (`local_sheetmusic/musicxml`), for plain `.musicxml` and compressed
   `.mxl` alike, by way of Verovio's own reader and its MEI output rather than an XML parser of
   our own.
@@ -28,3 +29,23 @@ All notable changes to `local_sheetmusic` are documented here.
   picture of the score rather than vector notation — `amd/src/export/pdf.js` records the trade.
 - `local_sheetmusic/engraver` now folds Verovio's WebAssembly aborts on unreadable input into
   one message of ours, and can emit MEI (`toMei()`) and read compressed MusicXML.
+- Added point-and-click and keyboard note entry, which is now the editing surface's **default**
+  tab. Clicking the staff places a note at the pitch clicked; clicking a note selects it, with
+  the selection and the insertion point drawn on the engraving. The toolbar offers note lengths
+  from semibreve to semiquaver, dots, accidentals, rests, ties, delete, undo and redo, plus key
+  signature, time signature and clef. Every gesture goes through the document model and is
+  re-serialised by `toAbc()`, so the two tabs never disagree.
+  - Hit-testing (`editor/surface-notes.js`) reads the staff geometry out of the rendered SVG
+    rather than assuming it: Verovio moves the staff down the page as soon as a note needs
+    ledger lines, so a fixed staff position would mis-read every pitch in a score with a high
+    note in it.
+  - Keyboard entry is the whole editor, not a shortcut for part of it: `a`–`g` place a note,
+    `1`–`7` set its length, `.` dots it, `^ _ =` add a sharp, flat or natural, `r` places a
+    rest, `t` ties, the arrows nudge the pitch (with Ctrl, the octave) and move the selection,
+    Backspace deletes, and Ctrl+Z / Ctrl+Shift+Z drive the model's undo stack. Every change is
+    announced in an `aria-live` region and the score is published as a hidden list, because the
+    engraved SVG is `aria-hidden` and unreadable to a screen reader. The button bar is a single
+    tab stop with arrow-key navigation, so reaching the staff by Tab does not mean passing
+    fourteen buttons first.
+  - Editing re-flows the bars for the metre in force, as one undoable step, so inserting or
+    deleting in the middle of a score cannot leave a bar a beat too long.

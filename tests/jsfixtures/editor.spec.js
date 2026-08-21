@@ -15,32 +15,21 @@ import './dom.js';
 import './verovio.js';
 import {parseMidi} from './midifile.js';
 import {abcjs, parseOnly} from './abcjs.js';
+import {withPrefix} from './strings.js';
 import {open, setStrings, EVENT_CANCEL, EVENT_PREVIEW, EVENT_SAVE} from 'local_sheetmusic/editor';
+import {EVENT_DRAWN} from 'local_sheetmusic/editor/notes';
 import {detect, importBytes} from 'local_sheetmusic/editor/importing';
 import {setParser as setAbcParser} from 'local_sheetmusic/abc';
 import {setParser as setMidiParser} from 'local_sheetmusic/midi';
+import {finishes} from './spec.js';
 
 setAbcParser(parseOnly);
 setMidiParser(parseMidi);
 assert.ok(abcjs, 'the vendored ABC parser is loaded');
 
-// English, as the language pack holds it; the surface never invents text of its own.
-setStrings(Object.fromEntries(
-    Object.entries({
-        editorapply: 'Use this import', editorcannotshow: 'This score cannot be shown yet: {$a}',
-        editordiscard: 'Discard this import', editorexport: 'Export',
-        editorexportfailed: 'That export could not be produced: {$a}',
-        editorexportmidi: 'MIDI file (.mid)', editorexportpdf: 'PDF page, as a picture (.pdf)',
-        editorexportpng: 'PNG image (.png)', editorexportsvg: 'SVG image (.svg)',
-        editorgrid: 'Snap notes to', editorgridvalue: '1/{$a} notes', editorimport: 'Import a file',
-        editorimportfailed: 'That file could not be imported: {$a}',
-        editorimportmidi: 'This came from a MIDI file, which does not contain sheet music.',
-        editorimportreading: 'Reading {$a}...', editorkey: 'Key', editormetre: 'Time signature',
-        editornotes: 'Please check these before you continue', editorpreview: 'Preview',
-        editorsource: 'ABC source', editorsourcehelp: 'Type ABC notation here.',
-        editortranspose: 'Transpose by semitones',
-    })
-));
+// English, as the language pack holds it - read out of the shipped PHP file rather than written
+// out here, so that a string the surface asks for and the pack has not got fails this test.
+setStrings(withPrefix('editor'));
 
 const fixture = (path) => fs.readFileSync(fileURLToPath(new URL(path, import.meta.url)));
 
@@ -55,7 +44,22 @@ const drawn = (element) => new Promise((resolve) => {
     element.addEventListener(EVENT_PREVIEW, (event) => resolve(event.detail), {once: true});
 });
 
+/** Wait for the note-entry tab to finish one engraving. */
+const redrawn = (element) => new Promise((resolve) => {
+    element.addEventListener(EVENT_DRAWN, (event) => resolve(event.detail), {once: true});
+});
+
+/** Press a key on the note-entry staff. */
+const press = async (element, init) => {
+    const waiting = redrawn(element);
+    element.querySelector('.sheetmusic-editor-score')
+        .dispatchEvent(new window.KeyboardEvent('keydown', {bubbles: true, ...init}));
+    await waiting;
+};
+
 const SIMPLE = 'X:1\nM:4/4\nK:G\n|GABc dedB|';
+
+const done = finishes('editor');
 
 const run = async () => {
     // ---- file sniffing, which decides which importer runs ----
@@ -119,6 +123,48 @@ const run = async () => {
         'typing changes what is engraved'
     );
 
+    // ---- the two tabs, and the one document under them ----
+    assert.strictEqual(surface.querySelectorAll('[role="tab"]').length, 2, 'the surface has two tabs');
+    const tabOf = (name) => Array.from(surface.querySelectorAll('[role="tab"]'))
+        .find((tab) => tab.textContent === name);
+    assert.strictEqual(tabOf('Notes').getAttribute('aria-selected'), 'true',
+        'and opens on the note-entry tab, because the editor is for musicians rather than ABC typists');
+    assert.strictEqual(tabOf('Source').getAttribute('aria-selected'), 'false', 'with the source tab behind it');
+    assert.strictEqual(surface.querySelector('[aria-labelledby$="tab-source"]').hidden, true,
+        'whose panel is hidden until it is asked for');
+    assert.ok(surface.querySelector('.sheetmusic-editor-notespane .sheetmusic-editor-score'),
+        'the note-entry staff is on the page');
+    assert.ok(!Array.from(surface.querySelectorAll('*')).some((node) => node.textContent === 'undefined'),
+        'and every label in it came from the language pack');
+
+    // ABC typed in the source tab is what the staff then edits.
+    tabOf('Source').dispatchEvent(new window.Event('click'));
+    await drawn(first);
+    assert.strictEqual(surface.querySelector('[aria-labelledby$="tab-source"]').hidden, false,
+        'choosing the source tab shows it');
+    textarea.value = 'X:1\nM:3/4\nL:1/8\nK:D\n|d2e2f2|';
+    textarea.dispatchEvent(new window.Event('input'));
+    await drawn(first);
+    tabOf('Notes').dispatchEvent(new window.Event('click'));
+    await redrawn(first);
+    assert.strictEqual(surface.querySelectorAll('.sheetmusic-editor-listing li').length, 3,
+        'the staff is now showing the three notes that were typed as ABC');
+    assert.strictEqual(surface.querySelector('.sheetmusic-editor-listing li').textContent, 'D5 Crotchet',
+        'read back with the right pitch and length');
+
+    // And a note placed on the staff is in the source tab: one document, two views.
+    await press(first, {key: 'End'});
+    await press(first, {key: 'ArrowUp'});
+    assert.strictEqual(textarea.value, 'X:1\nM:3/4\nL:1/8\nK:D\n|d2e2g2|',
+        'moving a note by a step comes back out as ABC, key and metre intact');
+    await press(first, {key: 'a'});
+    assert.strictEqual(textarea.value, 'X:1\nM:3/4\nL:1/8\nK:D\n|d2e2g2|a2|',
+        'and a note typed on the staff opens the bar it needs, serialised by the same writer as everywhere else');
+
+    tabOf('Source').dispatchEvent(new window.Event('click'));
+    await drawn(first);
+    assert.ok(surface.querySelector('.sheetmusic-editor-preview svg'), 'the preview followed it back');
+
     // A broken score must be reported in the surface and must not blank the preview.
     const good = surface.querySelector('.sheetmusic-editor-preview').innerHTML;
     textarea.value = 'this is not a tune at all';
@@ -169,7 +215,7 @@ const run = async () => {
     third.dispatchEvent(new window.CustomEvent(EVENT_CANCEL));
     assert.deepStrictEqual(result, {source: SIMPLE, format: 'abc'}, 'the first outcome is the one that stands');
 
-    window.console.log('editor.spec: OK (contract, live preview, error surfacing, save veto, cancel)');
+    done('contract, two tabs, round trip, live preview, error surfacing, save veto, cancel');
 };
 
 run();

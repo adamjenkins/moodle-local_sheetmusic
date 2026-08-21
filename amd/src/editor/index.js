@@ -78,12 +78,19 @@
  * after every preview attempt, with `detail.error` set to a message or to `null`. Callers may
  * ignore it; the tests use it to know when an engraving has finished.
  *
- * ## What is not here yet
+ * ## The two tabs
  *
- * Point-and-click and keyboard note entry are Phase 3 (`DESIGN.md` section 8). The seam for them
- * is `editor/surface.js`: the preview is engraved with `xmlIdChecksum` already set, so its
- * element ids are stable between keystrokes and a hit-test layer can be added over it without
- * touching this contract.
+ * The surface opens on **Notes**, the point-and-click and keyboard note-entry view
+ * (`editor/notes.js`), with **Source** - the ABC itself and a live preview - beside it. Both edit
+ * one document: a note placed on the staff is serialised to ABC, and ABC typed in the source tab
+ * is parsed back into the model. Neither tab changes this contract, and `source()` still returns
+ * the ABC whichever tab the author last used.
+ *
+ * ## What is not here
+ *
+ * One staff and one voice. Grand staff, chords, tuplets and lyrics are Tier 2 in `DESIGN.md`
+ * section 8.3: the document model has no voice or staff dimension, so they are model work first
+ * and editor work second.
  *
  * @module     local_sheetmusic/editor
  * @copyright  2026 Adam Jenkins <adam@wisecat.net>
@@ -100,13 +107,32 @@ export const EVENT_CANCEL = 'local_sheetmusic/editor:cancel';
 
 export {EVENT_PREVIEW};
 
-/** @type {string[]} The language strings the surface needs, in the order get_strings wants. */
+/**
+ * The language strings the surface needs, in the order get_strings wants.
+ *
+ * Every `editor` string in the language pack is fetched, in one request, because the note-entry
+ * pane names note values, accidentals and positions out loud and picks the string by computed key.
+ *
+ * @type {string[]}
+ */
 const KEYS = [
-    'editorapply', 'editorcannotshow', 'editordiscard', 'editorexport', 'editorexportfailed',
-    'editorexportmidi', 'editorexportpdf', 'editorexportpng', 'editorexportsvg', 'editorgrid',
-    'editorgridvalue', 'editorimport', 'editorimportfailed', 'editorimportmidi',
-    'editorimportreading', 'editorkey', 'editormetre', 'editornotes', 'editorpreview',
-    'editorsource', 'editorsourcehelp', 'editortranspose',
+    'editoracciddblflat', 'editoracciddblsharp', 'editoraccidentals', 'editoraccidflat',
+    'editoraccidnatural', 'editoraccidsharp', 'editorapply', 'editorcannotshow', 'editorclef',
+    'editorclefalto', 'editorclefbass', 'editorcleftenor', 'editorcleftreble', 'editorcleftreble8',
+    'editordelete', 'editordiscard', 'editordot', 'editordur1', 'editordur16', 'editordur2',
+    'editordur32', 'editordur4', 'editordur64', 'editordur8', 'editordurdotted',
+    'editordurdoubledotted', 'editorentryduration', 'editorentryedit', 'editorentryhelp',
+    'editorentryhistory', 'editorentrytoolbar', 'editorexport', 'editorexportfailed',
+    'editorexportmidi', 'editorexportpdf', 'editorexportpng', 'editorexportsvg', 'editorflat',
+    'editorgrid', 'editorgridvalue', 'editorimport', 'editorimportfailed', 'editorimportmidi',
+    'editorimportreading', 'editorkey', 'editorkeybackspace', 'editorlisting', 'editormetre',
+    'editornatural', 'editornokey', 'editornometre', 'editornoteentryunavailable', 'editornotename',
+    'editornotes', 'editorpitchaltered', 'editorposition', 'editorpreview', 'editorredo', 'editorrest',
+    'editorrestname', 'editorsaidadded', 'editorsaidchanged', 'editorsaidclef', 'editorsaiddeleted',
+    'editorsaidentry', 'editorsaidkey', 'editorsaidmetre', 'editorsaidnothing', 'editorsaidredone',
+    'editorsaidselected', 'editorsaidundone', 'editorscorelabel', 'editorscoreroledescription',
+    'editorsharp', 'editorshortcut', 'editorsource', 'editorsourcehelp', 'editortabnotes',
+    'editortabsource', 'editortie', 'editortiedname', 'editortranspose', 'editorundo'
 ];
 
 /** @type {Promise<object>|null} The resolved strings, fetched once per page. */
