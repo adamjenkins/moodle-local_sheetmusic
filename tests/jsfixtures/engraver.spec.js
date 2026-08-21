@@ -10,7 +10,7 @@
 
 import assert from 'node:assert';
 import './dom.js';
-import {render, toMidi, version, setToolkitFactory} from '../../amd/src/engraver.js';
+import {render, toMidi, version, setToolkitFactory} from 'local_sheetmusic/engraver';
 
 const FIXTURE = 'X:1\nM:4/4\nK:G\n|GABc dedB|';
 const EXPECTED = ['g4', 'a4', 'b4', 'c5', 'd5', 'e5', 'd5', 'b4'];
@@ -19,8 +19,8 @@ const EXPECTED = ['g4', 'a4', 'b4', 'c5', 'd5', 'e5', 'd5', 'b4'];
 // by path here. Everything downstream of this is the production code path.
 setToolkitFactory(async () => {
     const [{default: createVerovioModule}, {VerovioToolkit, enableLog, LOG_OFF}] = await Promise.all([
-        import('../../thirdparty/verovio/verovio-module.mjs'),
-        import('../../thirdparty/verovio/verovio.mjs'),
+        import('../../thirdparty/verovio/verovio-module.js'),
+        import('../../thirdparty/verovio/verovio.js'),
     ]);
     const module = await createVerovioModule();
     const toolkit = new VerovioToolkit(module);

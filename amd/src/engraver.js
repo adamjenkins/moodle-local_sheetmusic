@@ -79,33 +79,32 @@ const inputFormat = (format) => {
 };
 
 /**
- * Where the vendored engine lives, as a URL this page can import from.
- *
- * @returns {string} A base URL ending in a slash.
- */
-const engineBase = () => {
-    const wwwroot = (window.M && window.M.cfg && window.M.cfg.wwwroot) || '';
-    return `${wwwroot}/local/sheetmusic/thirdparty/verovio/`;
-};
-
-/**
  * Load Verovio and build a toolkit.
+ *
+ * The engine is an ES module, and a dynamic import() written here would be rewritten by
+ * Moodle's grunt build into a RequireJS call that cannot load one. So the actual import lives
+ * in js/verovio-bootstrap.js, outside amd/, and is pulled in with a real module script. See
+ * that file for the full reasoning.
  *
  * @returns {Promise<object>} A ready toolkit.
  */
-const loadToolkit = async () => {
-    const base = engineBase();
-    const [{default: createVerovioModule}, {VerovioToolkit, enableLog, LOG_OFF}] = await Promise.all([
-        import(`${base}verovio-module.mjs`),
-        import(`${base}verovio.mjs`),
-    ]);
-    const module = await createVerovioModule();
-    const toolkit = new VerovioToolkit(module);
-    // Verovio warns about missing ABC title fields; silence it rather than filling the browser
-    // console on every page that shows a score. enableLog takes the module explicitly.
-    enableLog(LOG_OFF, module);
-    return toolkit;
-};
+const loadToolkit = () => new Promise((resolve, reject) => {
+    const wwwroot = (window.M && window.M.cfg && window.M.cfg.wwwroot) || '';
+
+    window.addEventListener('local_sheetmusic/verovio-ready', (event) => {
+        if (event.detail && event.detail.toolkit) {
+            resolve(event.detail.toolkit);
+        } else {
+            reject((event.detail && event.detail.error) || new Error('local_sheetmusic: engine failed to load'));
+        }
+    }, {once: true});
+
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.src = `${wwwroot}/local/sheetmusic/js/verovio-bootstrap.js`;
+    script.addEventListener('error', () => reject(new Error('local_sheetmusic: could not fetch the engine')));
+    document.head.appendChild(script);
+});
 
 /**
  * Obtain a ready toolkit, loading the engine on first use.

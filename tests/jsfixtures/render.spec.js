@@ -6,8 +6,8 @@
 
 import assert from 'node:assert';
 import './dom.js';
-import {setToolkitFactory} from '../../amd/src/engraver.js';
-import {hydrate, hydrateAll} from '../../amd/src/render.js';
+import {setToolkitFactory} from 'local_sheetmusic/engraver';
+import {hydrate, hydrateAll} from 'local_sheetmusic/render';
 
 let renderCalls = 0;
 

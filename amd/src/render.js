@@ -25,7 +25,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {render as engrave} from './engraver.js';
+import {render as engrave} from 'local_sheetmusic/engraver';
 
 /** @type {string} Marks a placeholder as already rendered. */
 const RENDERED = 'sheetmusicRendered';

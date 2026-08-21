@@ -1,8 +1,12 @@
 {
-  "name": "local-sheetmusic",
+  "name": "local_sheetmusic",
   "private": true,
   "type": "module",
-  "description": "Marks amd/src as ES modules so they can be unit tested with node.",
+  "description": "Marks amd/src as ES modules and lets node resolve Moodle AMD module names in unit tests.",
+  "exports": {
+    "./engraver": "./amd/src/engraver.js",
+    "./render": "./amd/src/render.js"
+  },
   "devDependencies": {
     "jsdom": "^30.0.1"
   }
