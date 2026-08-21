@@ -11,6 +11,7 @@
 import assert from 'node:assert';
 import './dom.js';
 import {render, toMidi, version, setToolkitFactory} from 'local_sheetmusic/engraver';
+import {finishes} from './spec.js';
 
 const FIXTURE = 'X:1\nM:4/4\nK:G\n|GABc dedB|';
 const EXPECTED = ['g4', 'a4', 'b4', 'c5', 'd5', 'e5', 'd5', 'b4'];
@@ -27,6 +28,8 @@ setToolkitFactory(async () => {
     enableLog(LOG_OFF, module);
     return toolkit;
 });
+
+const done = finishes('engraver');
 
 const run = async () => {
     const engine = await version();
@@ -88,7 +91,7 @@ const run = async () => {
     }
     assert.ok((await render(FIXTURE, 'abc', {})).svg.includes('<svg'), 'and the toolkit survives the abort');
 
-    window.console.log(`engraver.spec: OK (Verovio ${engine}, 8 notes, MusicXML in, MIDI out)`);
+    done(`Verovio ${engine}, 8 notes, MusicXML in, MIDI out`);
 };
 
 run();

@@ -18,6 +18,7 @@ import {EXPORTS, measure, setRasteriser, toMidi, toPdf, toPng, toSvg} from 'loca
 import {adler32, crc32, storedDeflate} from 'local_sheetmusic/export/binary';
 import {encodePdf} from 'local_sheetmusic/export/pdf';
 import {encodePng} from 'local_sheetmusic/export/png';
+import {finishes} from './spec.js';
 
 /** A four-by-three test bitmap: opaque red, green, blue and a half-transparent black. */
 const swatch = () => {
@@ -38,6 +39,8 @@ const score = () => createScore({key: 'G', metre: '4/4'})
     .addNote({step: 'A', octave: 4, duration: 8})
     .addNote({step: 'B', octave: 4, duration: 8})
     .addNote({step: 'C', octave: 5, duration: 8});
+
+const done = finishes('export');
 
 const run = async () => {
     // ---- the checksums and the compressor, which everything else trusts ----
@@ -165,7 +168,7 @@ const run = async () => {
     }
 
     setRasteriser(null);
-    window.console.log('export.spec: OK (MThd, <svg, \\x89PNG, %PDF - all decoded, not just sniffed)');
+    done('MThd, <svg, \\x89PNG, %PDF - all decoded, not just sniffed');
 };
 
 run();

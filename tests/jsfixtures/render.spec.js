@@ -8,6 +8,7 @@ import assert from 'node:assert';
 import './dom.js';
 import {setToolkitFactory} from 'local_sheetmusic/engraver';
 import {hydrate, hydrateAll} from 'local_sheetmusic/render';
+import {finishes} from './spec.js';
 
 let renderCalls = 0;
 
@@ -42,6 +43,8 @@ const placeholder = () => {
     document.body.appendChild(el);
     return el;
 };
+
+const done = finishes('render');
 
 const run = async () => {
     const el = placeholder();
@@ -82,7 +85,7 @@ const run = async () => {
     assert.strictEqual(bad.dataset.sheetmusicError, '1', 'render failure is recorded');
     assert.ok(bad.querySelector('.sheetmusic-source').textContent.includes('K:G'), 'source survives');
 
-    window.console.log('render.spec: OK');
+    done('read-only rendering');
 };
 
 run();

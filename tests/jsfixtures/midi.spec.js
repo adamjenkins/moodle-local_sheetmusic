@@ -19,6 +19,7 @@ import {fromMidi, quantise, setParser, flatten} from 'local_sheetmusic/midi';
 import {intoBars, splitTicks} from 'local_sheetmusic/barring';
 import {fifthsOfKeyName, guessFifths, spellPitch, spellingTable} from 'local_sheetmusic/keys';
 import {toAbc} from 'local_sheetmusic/abc';
+import {finishes} from './spec.js';
 
 setParser(parseMidi);
 
@@ -28,6 +29,8 @@ const fixture = (name) => fs.readFileSync(fileURLToPath(
 
 /** The melody both fixtures encode: G4 A4 B4 c5 d5 | e5. d5 B4, in two bars of 4/4. */
 const EXPECTED_MUSIC = '|G2A2Bcd2|e3dB4|';
+
+const done = finishes('midi');
 
 const run = async () => {
     // Pure pieces first.
@@ -191,7 +194,7 @@ const run = async () => {
     assert.strictEqual(both.notes.length, 8, 'notes are collected across every track');
     assert.ok(both.meta.timeSignature, 'meta events are collected from the track they sit on');
 
-    window.console.log('midi.spec: OK (clean == jittered, options, chords reported, SMPTE refused)');
+    done('clean == jittered, options, chords reported, SMPTE refused');
 };
 
 run();

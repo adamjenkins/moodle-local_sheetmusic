@@ -12,8 +12,11 @@ import './verovio.js';
 import {fromMei, fromMusicXml, importMusicXml} from 'local_sheetmusic/musicxml';
 import {fifthsOf, keyAlteration, keyName} from 'local_sheetmusic/keys';
 import {toAbc} from 'local_sheetmusic/abc';
+import {finishes} from './spec.js';
 
 const fixture = (name) => fileURLToPath(new URL(`../fixtures/musicxml/${name}`, import.meta.url));
+
+const done = finishes('musicxml');
 
 const run = async () => {
     // The pure mappings first: they are what every wrong key signature would come from.
@@ -126,7 +129,7 @@ const run = async () => {
     assert.strictEqual(bare.score.metre, '6/8', 'MEI meterSig read');
     assert.strictEqual(bare.score.clef, 'bass', 'MEI clef read');
 
-    window.console.log('musicxml.spec: OK (plain XML, .mxl, warnings, refusals, MEI seam)');
+    done('plain XML, .mxl, warnings, refusals, MEI seam');
 };
 
 run();
