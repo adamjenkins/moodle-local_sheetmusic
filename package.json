@@ -4,7 +4,9 @@
   "type": "module",
   "description": "Marks amd/src as ES modules and lets node resolve Moodle AMD module names in unit tests.",
   "exports": {
+    "./abc": "./amd/src/abc.js",
     "./engraver": "./amd/src/engraver.js",
+    "./model": "./amd/src/model.js",
     "./render": "./amd/src/render.js"
   },
   "devDependencies": {

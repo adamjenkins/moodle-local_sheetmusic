@@ -1,6 +1,14 @@
 <?xml version="1.0"?>
 <libraries>
     <library>
+        <location>thirdparty/abcjs</location>
+        <name>abcjs</name>
+        <description>ABC notation parser and renderer. Only its parser is used, to read ABC source back into the document model; rendering is Verovio's job.</description>
+        <version>6.7.0</version>
+        <license>MIT</license>
+        <repository>https://github.com/paulrosen/abcjs</repository>
+    </library>
+    <library>
         <location>thirdparty/verovio</location>
         <name>Verovio</name>
         <description>Music notation engraving library, compiled to WebAssembly. Renders ABC, MusicXML, MEI and compressed MusicXML to SVG, and exports MIDI.</description>
