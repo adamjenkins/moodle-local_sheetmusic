@@ -231,6 +231,18 @@ export const createSurface = (spec) => {
      */
     const draw = async () => {
         const token = ++state.token;
+
+        // An empty surface is not a broken score. Opening the editor with nothing in it used to
+        // engrave '' and immediately show the red "this cannot be shown" alert, which reads as a
+        // failure before the author has typed anything.
+        if (textarea.value.trim() === '') {
+            preview.innerHTML = '';
+            state.error = null;
+            say(null);
+            container.dispatchEvent(new window.CustomEvent(EVENT_PREVIEW, {detail: {error: null}}));
+            return;
+        }
+
         try {
             // xmlIdChecksum keeps element ids stable between keystrokes, which is what Phase 3's
             // hit-testing will need and costs nothing now (P0-FINDINGS-T2 decision 6).
@@ -239,6 +251,11 @@ export const createSurface = (spec) => {
                 return;
             }
             preview.innerHTML = svg;
+            const engraved = preview.querySelector('svg');
+            if (engraved) {
+                engraved.setAttribute('aria-hidden', 'true');
+                engraved.setAttribute('focusable', 'false');
+            }
             state.error = null;
             say(null);
         } catch (error) {

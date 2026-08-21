@@ -77,6 +77,15 @@ export const hydrate = async (element) => {
     figure.setAttribute('aria-label', label);
     figure.innerHTML = svg;
 
+    // The container is the labelled image. Without this the engraved <svg> shows up in the
+    // accessibility tree as a second, unnamed image, which a screen reader announces as a
+    // bare "image" straight after the real description.
+    const svgel = figure.querySelector('svg');
+    if (svgel) {
+        svgel.setAttribute('aria-hidden', 'true');
+        svgel.setAttribute('focusable', 'false');
+    }
+
     // Keep the source in the accessibility tree rather than removing it from the page.
     const pre = element.querySelector('.sheetmusic-source');
     if (pre) {

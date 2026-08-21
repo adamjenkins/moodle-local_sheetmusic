@@ -52,9 +52,17 @@ export const setToolkitFactory = (factory) => {
  */
 const DEFAULT_OPTIONS = {
     adjustPageHeight: true,
+    // Without adjustPageWidth a four-bar exercise is laid out across a full page, so the
+    // notation ends up a third of the size it could be in the same container. Measured on the
+    // reference fixture: viewBox 840x112 becomes 536x80.
+    adjustPageWidth: true,
     breaks: 'auto',
     footer: 'none',
     header: 'none',
+    pageMarginBottom: 10,
+    pageMarginLeft: 10,
+    pageMarginRight: 10,
+    pageMarginTop: 10,
     scale: 40,
     svgHtml5: true,
     svgAdditionalAttribute: ['note@pname', 'note@oct', 'note@dur'],
