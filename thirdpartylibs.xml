@@ -17,4 +17,12 @@
         <licenseversion>3.0+</licenseversion>
         <repository>https://github.com/rism-digital/verovio</repository>
     </library>
+    <library>
+        <location>thirdparty/midi-file</location>
+        <name>midi-file</name>
+        <description>Standard MIDI File parser. Used by the MIDI import quantiser to read note-on and note-off events, tempo, time signature and key signature out of an uploaded file.</description>
+        <version>1.2.4</version>
+        <license>MIT</license>
+        <repository>https://github.com/carter-thaxton/midi-file</repository>
+    </library>
 </libraries>
