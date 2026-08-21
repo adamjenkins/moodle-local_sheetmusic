@@ -6,6 +6,10 @@
   "exports": {
     "./abc": "./amd/src/abc.js",
     "./barring": "./amd/src/barring.js",
+    "./editor": "./amd/src/editor.js",
+    "./editor/importing": "./amd/src/editor/importing.js",
+    "./editor/index": "./amd/src/editor/index.js",
+    "./editor/surface": "./amd/src/editor/surface.js",
     "./engraver": "./amd/src/engraver.js",
     "./export": "./amd/src/export.js",
     "./export/binary": "./amd/src/export/binary.js",

@@ -1,0 +1,79 @@
+/* Sizing for the engraved SVG and layout for the editing surface. */
+
+/* Verovio is asked for svgViewBox output, which has no intrinsic size, so every consumer of a
+   rendered score has to give it one (P0-FINDINGS-T2 decision 10). */
+.sheetmusic-render svg,
+.sheetmusic-editor-preview svg {
+    height: auto;
+    max-width: 100%;
+}
+
+.sheetmusic-editor-toolbar {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.sheetmusic-editor-field {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.sheetmusic-editor-field label {
+    margin-bottom: 0;
+}
+
+.sheetmusic-editor-field select,
+.sheetmusic-editor-field input[type="number"] {
+    width: auto;
+}
+
+.sheetmusic-editor-panes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.sheetmusic-editor-pane {
+    flex: 1 1 20rem;
+    min-width: 0;
+}
+
+.sheetmusic-editor-source {
+    font-family: monospace;
+    white-space: pre;
+}
+
+.sheetmusic-editor-preview {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    min-height: 8rem;
+    overflow-x: auto;
+    padding: 0.5rem;
+}
+
+/* A Verovio SVG has a viewBox and no intrinsic size, so it shrinks to whatever box it is put
+   in. In a narrow modal that makes the notation too small to check, which is the one thing a
+   preview has to be good for, so it is given a floor and the pane scrolls instead. */
+.sheetmusic-editor-preview svg {
+    min-width: 20rem;
+}
+
+.sheetmusic-editor-legend {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.sheetmusic-editor-midi .sheetmusic-editor-field {
+    margin-bottom: 0.5rem;
+}
+
+.sheetmusic-editor-actions {
+    display: flex;
+    gap: 0.5rem;
+}
