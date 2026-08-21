@@ -31,3 +31,7 @@ $string['privacy:metadata'] = 'The Sheet music engine plugin does not store any 
 $string['scalelarge'] = 'Large';
 $string['scalemedium'] = 'Medium';
 $string['scalesmall'] = 'Small';
+$string['scorebars'] = '{$a} bars';
+$string['scoredefaulttitle'] = 'Sheet music';
+$string['scorekey'] = 'key {$a}';
+$string['scoremetre'] = '{$a} time';
