@@ -8,6 +8,9 @@
  * producing nothing (P0-FINDINGS-T3 section B3, and section B6 item 4 asks for exactly this).
  *
  * Run with: node tests/jsfixtures/midi.spec.js
+ *
+ * @copyright  2026 Adam Jenkins <adam@wisecat.net>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import assert from 'node:assert';
@@ -16,6 +19,7 @@ import {fileURLToPath} from 'node:url';
 import './dom.js';
 import {midiFile, parseMidi} from './midifile.js';
 import {fromMidi, quantise, setParser, flatten} from 'local_sheetmusic/midi';
+import {MAX_IMPORT_BARS} from 'local_sheetmusic/limits';
 import {intoBars, splitTicks} from 'local_sheetmusic/barring';
 import {fifthsOfKeyName, guessFifths, spellPitch, spellingTable} from 'local_sheetmusic/keys';
 import {toAbc} from 'local_sheetmusic/abc';
@@ -24,7 +28,7 @@ import {finishes} from './spec.js';
 setParser(parseMidi);
 
 const fixture = (name) => fs.readFileSync(fileURLToPath(
-    new URL(`../../../../dev-docs/music_education_suite/fixtures/midi/${name}`, import.meta.url)
+    new URL(`../fixtures/midi/${name}`, import.meta.url)
 ));
 
 /** The melody both fixtures encode: G4 A4 B4 c5 d5 | e5. d5 B4, in two bars of 4/4. */
@@ -193,6 +197,46 @@ const run = async () => {
     const both = flatten(parseMidi(fixture('step-entered.mid')));
     assert.strictEqual(both.notes.length, 8, 'notes are collected across every track');
     assert.ok(both.meta.timeSignature, 'meta events are collected from the track they sit on');
+    // A delta time is a variable-length quantity reaching 0x0FFFFFFF, and onset-only quantisation
+    // turns the gap into bars. Before this was bounded, the 37-byte file below produced 139,811
+    // bars and five of them exhausted a gigabyte of heap.
+    const vlq = (n) => {
+        const out = [n & 0x7f];
+        let rest = n >> 7;
+        while (rest > 0) {
+            out.unshift((rest & 0x7f) | 0x80);
+            rest >>= 7;
+        }
+        return out;
+    };
+    const bomb = (pairs, delta) => {
+        const events = [];
+        for (let i = 0; i < pairs; i++) {
+            events.push(0x00, 0x90, 0x3c, 0x40, ...vlq(delta), 0x80, 0x3c, 0x40);
+        }
+        events.push(0x00, 0xff, 0x2f, 0x00);
+        const len = events.length;
+        return new Uint8Array([
+            0x4d, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, 0x01, 0xe0,
+            0x4d, 0x54, 0x72, 0x6b,
+            (len >>> 24) & 255, (len >>> 16) & 255, (len >>> 8) & 255, len & 255,
+            ...events,
+        ]);
+    };
+
+    const tiny = bomb(1, 0x0FFFFFFF);
+    assert.ok(tiny.length < 64, `the whole hostile file is ${tiny.length} bytes`);
+    await assert.rejects(
+        () => fromMidi(tiny.buffer, {}),
+        (error) => /past the \d+ this importer will read/.test(error.message),
+        'a file whose timing works out past the bar bound is refused'
+    );
+
+    // The bound is a ceiling, not a blanket refusal: ordinary files still import.
+    const {score} = await fromMidi(fixture('step-entered.mid'), {});
+    assert.ok(score.bars.length > 0 && score.bars.length <= MAX_IMPORT_BARS,
+        'a real fixture is well inside the bound');
+
 
     done('clean == jittered, options, chords reported, SMPTE refused');
 };

@@ -26,6 +26,7 @@
  */
 
 import {render as engrave} from 'local_sheetmusic/engraver';
+import {MAX_SOURCE_BYTES} from 'local_sheetmusic/limits';
 
 /** @type {string} Marks a placeholder as already rendered. */
 const RENDERED = 'sheetmusicRendered';
@@ -40,6 +41,19 @@ const sourceOf = (element) => {
     const pre = element.querySelector('.sheetmusic-source');
     return pre ? pre.textContent : '';
 };
+
+/**
+ * The length of a string in bytes rather than in UTF-16 code units.
+ *
+ * The server measures bytes, so the client has to as well or the two guards disagree on any
+ * score carrying a non-ASCII title.
+ *
+ * @param {string} text The string to measure.
+ * @returns {number} Its length in bytes.
+ */
+const byteLength = (text) => (typeof TextEncoder === 'function'
+    ? new TextEncoder().encode(text).length
+    : unescape(encodeURIComponent(text)).length);
 
 /**
  * Render one placeholder into notation.
@@ -60,6 +74,15 @@ export const hydrate = async (element) => {
     const source = sourceOf(element);
     const format = element.dataset.sheetmusicFormat || 'abc';
     const label = element.dataset.sheetmusicLabel || '';
+
+    // The filter refuses an oversized source server-side, so in filtered content this never
+    // fires. It fires for markup that reached the page without passing the filter, which is the
+    // only route by which a reader can be handed a score costing seconds of their main thread.
+    // Leaving the readable source in place is the same degradation as a failed render.
+    if (byteLength(source) > MAX_SOURCE_BYTES) {
+        element.dataset.sheetmusicError = 'toolarge';
+        return;
+    }
 
     let svg;
     try {
@@ -100,5 +123,53 @@ export const hydrate = async (element) => {
  * @param {ParentNode} root The subtree to search.
  * @returns {Promise<void[]>}
  */
-export const hydrateAll = (root) =>
-    Promise.all([...root.querySelectorAll('.sheetmusic-block')].map(hydrate));
+export const hydrateAll = async (root) => {
+    const blocks = [...root.querySelectorAll('.sheetmusic-block')];
+    const results = [];
+    for (const block of blocks) {
+        results.push(await hydrate(block));
+        // Engraving is synchronous WebAssembly, so a page of scores would otherwise hold the
+        // main thread for the sum of all of them without ever yielding. Handing control back
+        // between scores keeps the page responsive while they appear one after another.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    return results;
+};
+
+/**
+ * Render the scores in a subtree as the reader reaches them.
+ *
+ * Engraving is the expensive part and most pages show more scores than fit on a screen, so the
+ * work is deferred until a score is near the viewport. Where IntersectionObserver is missing
+ * this degrades to rendering everything at once, which is what the filter did before.
+ *
+ * @param {ParentNode} root The subtree to search.
+ * @returns {Promise<void>}
+ */
+export const observe = async (root) => {
+    if (typeof window.IntersectionObserver !== 'function') {
+        await hydrateAll(root);
+        return;
+    }
+
+    const blocks = [...root.querySelectorAll('.sheetmusic-block')]
+        .filter((block) => !block.dataset[RENDERED]);
+    if (!blocks.length) {
+        return;
+    }
+
+    const observer = new window.IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) {
+                return;
+            }
+            // Unobserved before rendering, so a score that scrolls in and out during a slow
+            // engrave is not queued twice. hydrate() is idempotent anyway; this keeps the
+            // observer's own bookkeeping small on a long page.
+            observer.unobserve(entry.target);
+            hydrate(entry.target);
+        });
+    }, {rootMargin: '200px'});
+
+    blocks.forEach((block) => observer.observe(block));
+};

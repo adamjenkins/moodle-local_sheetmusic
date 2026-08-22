@@ -5,6 +5,9 @@
  * these tests, and a test that invented its own English would not notice a string the surface
  * asks for and the language pack does not have. So the pack itself is the fixture: every key the
  * editor names has to exist here or the test that reads it fails.
+ *
+ * @copyright  2026 Adam Jenkins <adam@wisecat.net>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import fs from 'node:fs';

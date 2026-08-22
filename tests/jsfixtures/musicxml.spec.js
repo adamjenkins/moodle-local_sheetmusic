@@ -2,6 +2,9 @@
  * MusicXML import: the real Verovio reader, the real MEI mapping, both file shapes.
  *
  * Run with: node tests/jsfixtures/musicxml.spec.js
+ *
+ * @copyright  2026 Adam Jenkins <adam@wisecat.net>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import assert from 'node:assert';
@@ -10,6 +13,7 @@ import {fileURLToPath} from 'node:url';
 import './dom.js';
 import './verovio.js';
 import {fromMei, fromMusicXml, importMusicXml} from 'local_sheetmusic/musicxml';
+import {MAX_IMPORT_BYTES} from 'local_sheetmusic/limits';
 import {fifthsOf, keyAlteration, keyName} from 'local_sheetmusic/keys';
 import {toAbc} from 'local_sheetmusic/abc';
 import {finishes} from './spec.js';
@@ -128,6 +132,22 @@ const run = async () => {
     assert.strictEqual(bare.score.key, 'Em', 'MEI keySig sig+mode read');
     assert.strictEqual(bare.score.metre, '6/8', 'MEI meterSig read');
     assert.strictEqual(bare.score.clef, 'bass', 'MEI clef read');
+    // A .mxl is a ZIP whose decompressed size and entry count are unknowable from here, and it is
+    // base64-encoded before the engine sees it, so the archive itself is what gets bounded.
+    const oversized = new Uint8Array(MAX_IMPORT_BYTES + 1024);
+    oversized.set([0x50, 0x4b, 0x03, 0x04]);
+    await assert.rejects(
+        () => importMusicXml(oversized),
+        (error) => /past the \d+MB this importer will read/.test(error.message),
+        'an archive past the size bound is refused before it is decompressed'
+    );
+
+    await assert.rejects(
+        () => importMusicXml('<score-partwise>' + 'x'.repeat(MAX_IMPORT_BYTES)),
+        (error) => /past the \d+MB this importer will read/.test(error.message),
+        'plain MusicXML past the size bound is refused too'
+    );
+
 
     done('plain XML, .mxl, warnings, refusals, MEI seam');
 };

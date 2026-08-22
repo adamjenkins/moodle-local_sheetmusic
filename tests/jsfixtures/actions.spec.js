@@ -7,6 +7,9 @@
  * editor asks for and the pack does not have fails this test.
  *
  * Run with: node tests/jsfixtures/actions.spec.js
+ *
+ * @copyright  2026 Adam Jenkins <adam@wisecat.net>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import assert from 'node:assert';

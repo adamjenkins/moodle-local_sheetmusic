@@ -39,6 +39,7 @@
  */
 
 import {barTicks, createScore, eventTicks} from 'local_sheetmusic/model';
+import {MAX_IMPORT_BARS, MAX_IMPORT_BYTES} from 'local_sheetmusic/limits';
 import {intoBars} from 'local_sheetmusic/barring';
 import {fifthsOf, fifthsOfKeyName, guessFifths, keyName, MAJOR_KEYS, spellPitch, spellingTable}
     from 'local_sheetmusic/keys';
@@ -299,7 +300,20 @@ export const quantise = (parsed, options = {}) => {
         });
     });
 
-    const bars = intoBars(spans, barTicks(metre));
+    // MIDI carries no barlines, so the bar count is derived from timing, and a delta time is a
+    // variable-length quantity reaching 0x0FFFFFFF. One such gap in a 37-byte file expands to
+    // 139,811 bars and a handful of them exhausts a gigabyte of heap, so the span is measured
+    // before it is materialised rather than after.
+    const perBar = barTicks(metre);
+    const totalTicks = spans.reduce((sum, span) => sum + span.ticks, 0);
+    if (totalTicks / perBar > MAX_IMPORT_BARS) {
+        throw new Error('local_sheetmusic: this MIDI file works out at '
+            + `${Math.round(totalTicks / perBar)} bars, which is past the ${MAX_IMPORT_BARS} this `
+            + 'importer will read. It is usually a file timed in something other than beats, or '
+            + 'one with a very long silence in it.');
+    }
+
+    const bars = intoBars(spans, perBar);
     warnings.push('MIDI files do not contain sheet music, so the note values, barlines and '
         + 'spelling above are a reading of the timing rather than a transcription. '
         + 'Triplets and other tuplets are not detected and will come out as the nearest '
@@ -322,6 +336,10 @@ export const quantise = (parsed, options = {}) => {
 export const fromMidi = async (buffer, options = {}) => {
     const parse = await ensureParser();
     const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+    if (bytes.length > MAX_IMPORT_BYTES) {
+        throw new Error(`local_sheetmusic: that file is ${Math.round(bytes.length / 1048576)}MB, `
+            + `which is past the ${Math.round(MAX_IMPORT_BYTES / 1048576)}MB this importer will read`);
+    }
     let parsed;
     try {
         parsed = parse(bytes);

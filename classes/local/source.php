@@ -35,7 +35,17 @@ namespace local_sheetmusic\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class source {
-    /** @var int Sources larger than this are stored as a file rather than inline. */
+    /** @var int The largest score source that may be stored inline, in bytes.
+     *
+     * This is a hard ceiling, not a routing decision: validate() refuses anything larger, so an
+     * oversized block is never wrapped as a score and never reaches the engraver. The bound
+     * exists because engraving cost is linear in source length and is paid by every reader of
+     * the page, on the browser's main thread - measured at roughly 0.1ms per source byte, so
+     * 50KB is about five seconds and 200KB about twenty. Exercise-level notation, which is what
+     * this suite is scoped to, runs to a few hundred bytes.
+     *
+     * local_sheetmusic/limits.js mirrors this value for the client-side guard. Change both.
+     */
     public const MAX_INLINE_BYTES = 51200;
 
     /** @var int The accessible description must stay below the Brickfield alt-text limit. */
@@ -64,6 +74,12 @@ final class source {
      * @return bool
      */
     public static function validate(string $raw, string $format): bool {
+        // Measured before any normalising, so an oversized source costs a strlen() and nothing
+        // else. normalise() only ever shortens, so a source over the limit here cannot come in
+        // under it afterwards.
+        if (strlen($raw) > self::MAX_INLINE_BYTES) {
+            return false;
+        }
         $raw = self::normalise($raw);
         if ($raw === '' || !formats::is_storable($format)) {
             return false;

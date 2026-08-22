@@ -6,6 +6,9 @@
  * the 7 MB artifact, so it is slower than the rest by design.
  *
  * Run with: node tests/jsfixtures/engraver.spec.js
+ *
+ * @copyright  2026 Adam Jenkins <adam@wisecat.net>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import assert from 'node:assert';

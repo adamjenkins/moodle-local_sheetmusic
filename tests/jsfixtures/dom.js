@@ -4,6 +4,9 @@
  * Importing this module installs document and window as globals, matching what the modules
  * see in a browser. It exists because the engine's model and serialiser layers are pure data
  * but its render layer is not, and the render layer is worth testing without a browser.
+ *
+ * @copyright  2026 Adam Jenkins <adam@wisecat.net>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import {JSDOM} from 'jsdom';

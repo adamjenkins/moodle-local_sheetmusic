@@ -35,6 +35,7 @@
 import {createScore, DURATIONS} from 'local_sheetmusic/model';
 import {fifthsOf, keyAlteration, keyName} from 'local_sheetmusic/keys';
 import {toMei} from 'local_sheetmusic/engraver';
+import {MAX_IMPORT_BYTES} from 'local_sheetmusic/limits';
 
 /** @type {object} MEI accidental tokens to the model's written alteration. */
 const ACCIDENTALS = {f: -1, ff: -2, n: 0, s: 1, ss: 2, x: 2};
@@ -325,9 +326,20 @@ const toBase64 = (bytes) => {
  */
 export const importMusicXml = async (input) => {
     if (typeof input === 'string') {
+        if (input.length > MAX_IMPORT_BYTES) {
+            throw new Error('local_sheetmusic: that MusicXML is past the '
+                + `${Math.round(MAX_IMPORT_BYTES / 1048576)}MB this importer will read`);
+        }
         return fromMei(await toMei(input, 'musicxml'));
     }
     const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
+    // Checked before base64, which is itself a 4/3 memory multiplier, and well before the engine
+    // decompresses anything: a .mxl is a ZIP, and neither its decompressed size nor its entry
+    // count is knowable from here. Bounding the archive bounds all three.
+    if (bytes.length > MAX_IMPORT_BYTES) {
+        throw new Error(`local_sheetmusic: that file is ${Math.round(bytes.length / 1048576)}MB, `
+            + `which is past the ${Math.round(MAX_IMPORT_BYTES / 1048576)}MB this importer will read`);
+    }
     if (isZip(bytes)) {
         return fromMei(await toMei(toBase64(bytes), 'mxl'));
     }

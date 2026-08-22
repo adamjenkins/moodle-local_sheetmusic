@@ -11,10 +11,11 @@
     <library>
         <location>thirdparty/verovio</location>
         <name>Verovio</name>
-        <description>Music notation engraving library, compiled to WebAssembly. Renders ABC, MusicXML, MEI and compressed MusicXML to SVG, and exports MIDI.</description>
+        <description>Music notation engraving library, compiled to WebAssembly. Renders ABC, MusicXML, MEI and compressed MusicXML to SVG, and exports MIDI. The WebAssembly bundle embeds the SMuFL music fonts Verovio ships with - Bravura, Leipzig, Petaluma, Gootville, Leland and VerovioText - each of which is SIL OFL 1.1 licensed and redistributed as part of Verovio itself. Renamed from .mjs to .js because nginx serves an unknown extension as application/octet-stream, which browsers refuse to execute as a module; the file contents are upstream's.</description>
         <version>6.3.0</version>
         <license>LGPL</license>
         <licenseversion>3.0+</licenseversion>
+        <customised/>
         <repository>https://github.com/rism-digital/verovio</repository>
     </library>
     <library>
@@ -23,6 +24,7 @@
         <description>Standard MIDI File parser. Used by the MIDI import quantiser to read note-on and note-off events, tempo, time signature and key signature out of an uploaded file.</description>
         <version>1.2.4</version>
         <license>MIT</license>
+        <customised/>
         <repository>https://github.com/carter-thaxton/midi-file</repository>
     </library>
 </libraries>

@@ -25,6 +25,7 @@
     "./export/pdf": "./amd/src/export/pdf.js",
     "./export/png": "./amd/src/export/png.js",
     "./keys": "./amd/src/keys.js",
+    "./limits": "./amd/src/limits.js",
     "./midi": "./amd/src/midi.js",
     "./model": "./amd/src/model.js",
     "./musicxml": "./amd/src/musicxml.js",

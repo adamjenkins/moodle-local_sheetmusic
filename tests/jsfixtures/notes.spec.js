@@ -7,6 +7,9 @@
  * click itself, which is exactly the path a browser takes through clientToUser().
  *
  * Run with: node tests/jsfixtures/notes.spec.js
+ *
+ * @copyright  2026 Adam Jenkins <adam@wisecat.net>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import assert from 'node:assert';

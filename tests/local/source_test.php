@@ -93,12 +93,70 @@ final class source_test extends \advanced_testcase {
     }
 
     /**
-     * The inline size threshold is the documented 50 KB.
+     * The inline size threshold is the documented 50 KB, and it is actually enforced.
+     *
+     * Asserting the constant alone proved nothing: it was dead code for the whole of the first
+     * implementation while this test passed. The enforcement assertions below are the point.
      *
      * @return void
      */
     public function test_inline_threshold(): void {
         $this->assertSame(51200, source::MAX_INLINE_BYTES);
+
+        $header = "X:1\nK:G\n";
+        $inside = $header . str_repeat('|GABc dedB', (int) ((source::MAX_INLINE_BYTES - strlen($header) - 16) / 10));
+        $outside = $header . str_repeat('|GABc dedB', (int) (source::MAX_INLINE_BYTES / 10) + 64);
+
+        $this->assertLessThanOrEqual(source::MAX_INLINE_BYTES, strlen($inside));
+        $this->assertGreaterThan(source::MAX_INLINE_BYTES, strlen($outside));
+
+        $this->assertTrue(source::validate($inside, 'abc'), 'a source inside the limit is accepted');
+        $this->assertFalse(source::validate($outside, 'abc'), 'a source past the limit is refused');
+    }
+
+    /**
+     * validate() refuses hostile and malformed input rather than merely mis-describing it.
+     *
+     * It is a plausibility check, not a sanitiser - escaping happens at the output sink - but it
+     * is the gate that decides whether arbitrary text gets wrapped up and presented as a score,
+     * so what it lets through matters.
+     *
+     * @return void
+     */
+    public function test_validate_refuses_hostile_input(): void {
+        // No X: header and no K: header, whatever else is in it.
+        $this->assertFalse(source::validate('<script>alert(1)</script>', 'abc'));
+        $this->assertFalse(source::validate("K:G\n|GABc|", 'abc'), 'X: header is required');
+        $this->assertFalse(source::validate("X:1\n|GABc|", 'abc'), 'K: header is required');
+
+        // A format outside the storable allowlist is refused however well formed the source is.
+        $this->assertFalse(source::validate("X:1\nK:G\n|GABc|", 'midi'));
+        $this->assertFalse(source::validate("X:1\nK:G\n|GABc|", 'mxl'));
+        $this->assertFalse(source::validate("X:1\nK:G\n|GABc|", 'klingon'));
+        $this->assertFalse(source::validate("X:1\nK:G\n|GABc|", ''));
+
+        // MusicXML has to actually declare itself.
+        $this->assertFalse(source::validate('<html><body>not music</body></html>', 'musicxml'));
+        $this->assertTrue(source::validate('<score-partwise version="4.0"/>', 'musicxml'));
+
+        // Whitespace-only content is not a score.
+        $this->assertFalse(source::validate("   \n\t\n  ", 'abc'));
+    }
+
+    /**
+     * describe() keeps its length promise even when handed a hostile title.
+     *
+     * The result becomes an aria-label, so it is attacker-authored text heading for an attribute.
+     * Escaping is the caller's job; staying inside the length bound is this function's.
+     *
+     * @return void
+     */
+    public function test_describe_bounds_a_hostile_title(): void {
+        $title = str_repeat('very long title ', 400);
+        $description = source::describe("X:1\nT:{$title}\nK:G\n|GABc|", 'abc');
+
+        $this->assertLessThanOrEqual(source::MAX_DESCRIPTION_CHARS, \core_text::strlen($description));
+        $this->assertNotEmpty($description);
     }
 
     /**

@@ -6,6 +6,9 @@
  * resolve is exercised too.
  *
  * Run with: node tests/jsfixtures/editor.spec.js
+ *
+ * @copyright  2026 Adam Jenkins <adam@wisecat.net>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 import assert from 'node:assert';
@@ -85,7 +88,7 @@ const run = async () => {
 
     const asMidi = await importBytes(
         'played.mid',
-        fixture('../../../../dev-docs/music_education_suite/fixtures/midi/human-played.mid')
+        fixture('../fixtures/midi/human-played.mid')
     );
     assert.strictEqual(asMidi.kind, 'midi', 'MIDI is reported as such, so the adjust panel can open');
     assert.ok(asMidi.warnings.length >= 3, 'and it arrives with its assumptions attached');
