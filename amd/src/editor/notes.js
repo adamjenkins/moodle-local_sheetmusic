@@ -112,7 +112,7 @@ export const createNotes = (spec) => {
         'aria-roledescription': strings.editorscoreroledescription,
         'aria-describedby': `${id}-notehelp ${id}-status`,
     });
-    const listing = make('ol', {className: 'sheetmusic-editor-listing sr-only visually-hidden'});
+    const listing = make('ol', {className: 'sheetmusic-editor-listing visually-hidden'});
     const toolbar = createToolbar({
         strings,
         id,
@@ -132,7 +132,7 @@ export const createNotes = (spec) => {
         board,
         help,
         status,
-        make('h6', {className: 'sr-only visually-hidden', textContent: strings.editorlisting}),
+        make('h6', {className: 'visually-hidden', textContent: strings.editorlisting}),
         listing,
     ]);
 
@@ -190,13 +190,13 @@ export const createNotes = (spec) => {
         if (!margin || !geometry.measures.length) {
             return;
         }
-        const overlay = makeSvg('g', {class: 'sheetmusic-editor-overlay'});
+        const overlay = makeSvg('g', {'class': 'sheetmusic-editor-overlay'});
         const event = state.selection === null ? null : geometry.events[state.selection];
         const home = geometry.measures[event ? event.measure : geometry.measures.length - 1];
         const space = home.spacing;
         if (event) {
             overlay.appendChild(makeSvg('rect', {
-                class: 'sheetmusic-editor-selected',
+                'class': 'sheetmusic-editor-selected',
                 x: event.x - space * 0.45,
                 y: event.y - space * 0.95,
                 width: space * 2,
@@ -205,11 +205,12 @@ export const createNotes = (spec) => {
             }));
         }
         const last = geometry.events.filter((candidate) => candidate.measure === home.index).pop();
-        const caret = event
-            ? event.x + space * 2
-            : (last ? last.x + space * 2 : home.contentX);
+        // Both the clicked event and the trailing one put the caret the same distance to their
+        // right, so the only question is which of them to measure from.
+        const anchor = event || last;
+        const caret = anchor ? anchor.x + space * 2 : home.contentX;
         overlay.appendChild(makeSvg('line', {
-            class: 'sheetmusic-editor-caret',
+            'class': 'sheetmusic-editor-caret',
             x1: Math.min(caret, home.x2 - space * 0.2),
             x2: Math.min(caret, home.x2 - space * 0.2),
             y1: home.top - space,
@@ -224,7 +225,7 @@ export const createNotes = (spec) => {
      *
      * @returns {Promise<void>}
      */
-    const draw = async () => {
+    const draw = async() => {
         const token = ++state.token;
         const events = flatten(state.score);
         const source = events.length ? toAbc(state.score) : emptyBar(state.score);

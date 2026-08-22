@@ -247,7 +247,7 @@ const keyOf = (staff) => {
     if (key.root === 'none') {
         return 'none';
     }
-    // abcjs capitalises modal names (Dor, Mix); ABC's own spelling is lower case, and the
+    // The abcjs parser capitalises modal names (Dor, Mix); ABC's own spelling is lower case, and the
     // stored source is read by musicians when the filter is off.
     const mode = String(key.mode || '');
     return `${key.root}${key.acc || ''}${mode.length > 1 ? mode.toLowerCase() : mode}`;
@@ -358,7 +358,7 @@ export const fromAbc = (text) => {
     if (!tunes || !tunes.length) {
         throw new Error('local_sheetmusic: that is not a tune');
     }
-    // deline() flattens abcjs's per-source-line structure; without it a tune broken over two
+    // Flattening with deline() removes abcjs's per-source-line structure; without it a tune broken over two
     // text lines parses as two independent staves.
     const lines = tunes[0].deline({}).filter((line) => line.staff && line.staff.length);
     const first = lines.length ? lines[0].staff[0] : {};

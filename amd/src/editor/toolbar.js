@@ -35,10 +35,10 @@ import {CLEFS, KEYS, METRES, TOOLBAR_DURATIONS} from 'local_sheetmusic/editor/ac
 import {fillNamed, make} from 'local_sheetmusic/editor/dom';
 
 /** @type {object} How each offered duration is written on its button. */
-const DURATION_TEXT = {1: '1', 2: '1/2', 4: '1/4', 8: '1/8', 16: '1/16'};
+const DURATION_TEXT = {'1': '1', '2': '1/2', '4': '1/4', '8': '1/8', '16': '1/16'};
 
 /** @type {object} The keyboard digit that sets each offered duration. */
-const DURATION_KEY = {1: '1', 2: '2', 4: '3', 8: '4', 16: '5'};
+const DURATION_KEY = {'1': '1', '2': '2', '4': '3', '8': '4', '16': '5'};
 
 /** @type {object[]} The accidental buttons: the mark shown, the alteration, and the string and key. */
 const ACCIDENTALS = [
@@ -76,7 +76,7 @@ const button = (spec, fire) => {
  * @returns {object} {field, select}.
  */
 const chooser = (spec, fire, build) => {
-    const select = make('select', {id: spec.id, className: 'custom-select form-select form-select-sm'});
+    const select = make('select', {id: spec.id, className: 'form-select form-select-sm'});
     spec.values.forEach((value) => {
         select.appendChild(make('option', {value, textContent: spec.text(value)}));
     });
@@ -84,7 +84,7 @@ const chooser = (spec, fire, build) => {
     return {
         select,
         field: make('div', {className: 'sheetmusic-editor-field'}, [
-            make('label', {for: spec.id, textContent: spec.label}),
+            make('label', {'for': spec.id, textContent: spec.label}),
             select,
         ]),
     };

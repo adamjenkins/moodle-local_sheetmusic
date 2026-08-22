@@ -34,9 +34,9 @@ import {locate} from 'local_sheetmusic/editor/actions';
 const ACCIDENTALS = {
     '-2': 'editoracciddblflat',
     '-1': 'editoraccidflat',
-    0: 'editoraccidnatural',
-    1: 'editoraccidsharp',
-    2: 'editoracciddblsharp',
+    '0': 'editoraccidnatural',
+    '1': 'editoraccidsharp',
+    '2': 'editoracciddblsharp',
 };
 
 /**

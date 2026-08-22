@@ -184,7 +184,7 @@ const loadStrings = () => new Promise((resolve, reject) => {
  * @throws {Error} If no container was passed, which is a programming error rather than a
  *                 runtime one and should not be caught.
  */
-export const open = async (spec = {}) => {
+export const open = async(spec = {}) => {
     const container = spec.container;
     if (!container || typeof container.appendChild !== 'function') {
         throw new Error('local_sheetmusic: editor.open() needs a container element to render into');

@@ -219,7 +219,10 @@ export const spellPitch = (note, table) => {
  * @returns {number} 0..11.
  */
 const tonicPitchClass = (name) => {
-    const accidental = name.length > 1 ? (name.charAt(1) === '#' ? 1 : -1) : 0;
+    let accidental = 0;
+    if (name.length > 1) {
+        accidental = name.charAt(1) === '#' ? 1 : -1;
+    }
     return pitchClass(NATURALS[STEPS.indexOf(name.charAt(0))] + accidental);
 };
 

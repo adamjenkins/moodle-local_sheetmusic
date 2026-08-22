@@ -49,6 +49,10 @@ const ACCIDENTALS = {'^': 1, '_': -1, '=': 0};
  * @returns {object|null} An action for `actions.apply()`, or null when the key is not ours and
  *                        must be left to the browser.
  */
+// A key mapper is one decision per key, and the score counts those decisions. The ladder below is
+// already flat and reads in keyboard order; grouping it into helpers would hide which keys are
+// handled, which is the one thing this file is for.
+// eslint-disable-next-line complexity
 export const mapKey = (event) => {
     const key = String(event.key || '');
     const command = Boolean(event.ctrlKey || event.metaKey);

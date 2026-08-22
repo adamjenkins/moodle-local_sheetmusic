@@ -199,7 +199,7 @@ const loadInto = (toolkit, source, format) => {
  *                         not, because identical scores on one page would then collide.
  * @returns {Promise<{svg: string, idMap: object}>} The rendered SVG and its element map.
  */
-export const render = async (source, format, options = {}) => {
+export const render = async(source, format, options = {}) => {
     const toolkit = await getToolkit();
     toolkit.setOptions({...DEFAULT_OPTIONS, ...options, inputFrom: inputFormat(format)});
     loadInto(toolkit, source, format);
@@ -214,7 +214,7 @@ export const render = async (source, format, options = {}) => {
  * @param {string} format The stored format token.
  * @returns {Promise<string>} Base64-encoded MIDI.
  */
-export const toMidi = async (source, format) => {
+export const toMidi = async(source, format) => {
     const toolkit = await getToolkit();
     toolkit.setOptions({...DEFAULT_OPTIONS, inputFrom: inputFormat(format)});
     loadInto(toolkit, source, format);
@@ -232,7 +232,7 @@ export const toMidi = async (source, format) => {
  * @param {string} format The stored format token, including mxl for compressed MusicXML.
  * @returns {Promise<string>} The score as MEI.
  */
-export const toMei = async (source, format) => {
+export const toMei = async(source, format) => {
     const toolkit = await getToolkit();
     toolkit.setOptions({...DEFAULT_OPTIONS, inputFrom: inputFormat(format)});
     loadInto(toolkit, source, format);
@@ -244,4 +244,4 @@ export const toMei = async (source, format) => {
  *
  * @returns {Promise<string>} The Verovio version string.
  */
-export const version = async () => (await getToolkit()).getVersion();
+export const version = async() => (await getToolkit()).getVersion();

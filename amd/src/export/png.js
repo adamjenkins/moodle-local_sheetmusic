@@ -81,7 +81,7 @@ const scanlines = (data, width, height) => {
  * @returns {Promise<Uint8Array>} The PNG file.
  * @throws {Error} If the pixel data is not the size the dimensions claim.
  */
-export const encodePng = async (image, scale = 1) => {
+export const encodePng = async(image, scale = 1) => {
     const {width, height, data} = image;
     if (!width || !height || data.length !== width * height * 4) {
         throw new Error(`local_sheetmusic: ${width}x${height} needs ${width * height * 4} bytes `

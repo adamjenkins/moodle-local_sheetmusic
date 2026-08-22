@@ -142,7 +142,7 @@ export const ascii = (text) => {
  * @param {Uint8Array} bytes The data.
  * @returns {Promise<Uint8Array>} A zlib stream.
  */
-export const deflate = async (bytes) => {
+export const deflate = async(bytes) => {
     const Compressor = (typeof CompressionStream === 'undefined') ? null : CompressionStream;
     if (!Compressor) {
         return storedDeflate(bytes);

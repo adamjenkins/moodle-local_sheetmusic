@@ -86,7 +86,7 @@ export const createSurface = (spec) => {
         className: 'sheetmusic-editor-preview', role: 'img', 'aria-label': strings.editorpreview,
     });
     const file = make('input', {type: 'file', id: `${id}-file`, className: 'sheetmusic-editor-file', accept: ACCEPT});
-    const chooser = make('select', {id: `${id}-export`, className: 'custom-select'});
+    const chooser = make('select', {id: `${id}-export`, className: 'form-select'});
     EXPORTS.forEach((entry) => {
         chooser.appendChild(make('option', {
             value: entry.format, textContent: strings[`editorexport${entry.format}`] || entry.format,
@@ -101,7 +101,7 @@ export const createSurface = (spec) => {
     const sourcePanel = make('div', {className: 'sheetmusic-editor-panel'}, [
         make('div', {className: 'sheetmusic-editor-panes'}, [
             make('div', {className: 'sheetmusic-editor-pane'}, [
-                make('label', {for: textarea.id, textContent: strings.editorsource}),
+                make('label', {'for': textarea.id, textContent: strings.editorsource}),
                 textarea,
                 make('p', {id: `${id}-sourcehelp`, className: 'form-text', textContent: strings.editorsourcehelp}),
             ]),
@@ -142,7 +142,7 @@ export const createSurface = (spec) => {
      *
      * @returns {Promise<void>}
      */
-    const draw = async () => {
+    const draw = async() => {
         const token = ++state.token;
 
         // An empty surface is not a broken score. Opening the editor with nothing in it used to
@@ -157,7 +157,7 @@ export const createSurface = (spec) => {
         }
 
         try {
-            // xmlIdChecksum keeps element ids stable between keystrokes, which is what the
+            // Setting xmlIdChecksum keeps element ids stable between keystrokes, which is what the
             // note-entry pane's hit-testing needs (P0-FINDINGS-T2 decision 6).
             const {svg} = await engrave(textarea.value, 'abc', {xmlIdChecksum: true});
             if (token !== state.token) {
@@ -209,7 +209,7 @@ export const createSurface = (spec) => {
      *
      * @returns {Promise<void>}
      */
-    const syncNotes = async () => {
+    const syncNotes = async() => {
         if (state.synced === textarea.value) {
             return;
         }
@@ -233,11 +233,11 @@ export const createSurface = (spec) => {
     const root = make('div', {className: 'sheetmusic-editor'}, [
         make('div', {className: 'sheetmusic-editor-toolbar'}, [
             make('div', {className: 'sheetmusic-editor-field'}, [
-                make('label', {for: file.id, textContent: strings.editorimport}),
+                make('label', {'for': file.id, textContent: strings.editorimport}),
                 file,
             ]),
             make('div', {className: 'sheetmusic-editor-field'}, [
-                make('label', {for: chooser.id, textContent: strings.editorexport}),
+                make('label', {'for': chooser.id, textContent: strings.editorexport}),
                 chooser,
                 exporter,
             ]),
@@ -253,7 +253,7 @@ export const createSurface = (spec) => {
     textarea.value = String(spec.source || '');
     container.appendChild(root);
 
-    file.addEventListener('change', async () => {
+    file.addEventListener('change', async() => {
         const chosen = file.files && file.files[0];
         if (!chosen) {
             return;
@@ -285,7 +285,7 @@ export const createSurface = (spec) => {
      *
      * @returns {Promise<void>}
      */
-    const requantise = async () => {
+    const requantise = async() => {
         if (!state.imported) {
             return;
         }
@@ -315,7 +315,7 @@ export const createSurface = (spec) => {
         textarea.focus();
     });
 
-    midi.discard.addEventListener('click', async () => {
+    midi.discard.addEventListener('click', async() => {
         state.imported = null;
         midi.panel.hidden = true;
         textarea.value = state.previous;
@@ -324,7 +324,7 @@ export const createSurface = (spec) => {
         await syncNotes();
     });
 
-    exporter.addEventListener('click', async () => {
+    exporter.addEventListener('click', async() => {
         const entry = EXPORTS.find((candidate) => candidate.format === chooser.value);
         try {
             // The exporters need the model, and the model comes from parsing what is on screen.
@@ -352,7 +352,7 @@ export const createSurface = (spec) => {
          *
          * @returns {Promise<string|null>} An error message, or null when all is well.
          */
-        validate: async () => {
+        validate: async() => {
             window.clearTimeout(state.timer);
             await draw();
             return state.error;

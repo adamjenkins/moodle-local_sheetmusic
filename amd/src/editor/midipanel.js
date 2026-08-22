@@ -38,10 +38,10 @@ import {GRIDS} from 'local_sheetmusic/midi';
  */
 export const buildMidiPanel = (strings, id) => {
     const field = (key, control) => make('div', {className: 'sheetmusic-editor-field'}, [
-        make('label', {for: control.id, textContent: strings[key]}),
+        make('label', {'for': control.id, textContent: strings[key]}),
         control,
     ]);
-    const grid = make('select', {id: `${id}-grid`, className: 'custom-select'});
+    const grid = make('select', {id: `${id}-grid`, className: 'form-select'});
     GRIDS.forEach((value) => {
         grid.appendChild(make('option', {value: String(value), textContent: fill(strings.editorgridvalue, value)}));
     });

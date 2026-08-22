@@ -324,7 +324,7 @@ const toBase64 = (bytes) => {
  * @returns {Promise<object>} {score, warnings}.
  * @throws {Error} If the file cannot be read, or holds notation the model cannot represent.
  */
-export const importMusicXml = async (input) => {
+export const importMusicXml = async(input) => {
     if (typeof input === 'string') {
         if (input.length > MAX_IMPORT_BYTES) {
             throw new Error('local_sheetmusic: that MusicXML is past the '
@@ -357,4 +357,4 @@ export const importMusicXml = async (input) => {
  * @param {string|ArrayBuffer|Uint8Array} input Plain MusicXML text, or file bytes.
  * @returns {Promise<object>} The Score.
  */
-export const fromMusicXml = async (input) => (await importMusicXml(input)).score;
+export const fromMusicXml = async(input) => (await importMusicXml(input)).score;

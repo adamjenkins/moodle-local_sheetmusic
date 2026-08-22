@@ -128,7 +128,7 @@ const rasteriseOnCanvas = (svg, target) => new Promise((resolve, reject) => {
  * @param {object} options {scale}.
  * @returns {Promise<object>} {width, height, data} - data is RGBA bytes.
  */
-export const rasterise = async (svg, options = {}) => {
+export const rasterise = async(svg, options = {}) => {
     const scale = Number(options.scale) || DEFAULT_SCALE;
     const size = measure(svg);
     const target = {
@@ -148,7 +148,7 @@ export const rasterise = async (svg, options = {}) => {
  * @param {object} score A Score.
  * @returns {Promise<string>} The SVG.
  */
-const engrave = async (score) => (await render(toAbc(score), 'abc', {})).svg;
+const engrave = async(score) => (await render(toAbc(score), 'abc', {})).svg;
 
 /**
  * Export a score as SVG.
@@ -156,7 +156,7 @@ const engrave = async (score) => (await render(toAbc(score), 'abc', {})).svg;
  * @param {object} score A Score.
  * @returns {Promise<string>} The SVG document, as text.
  */
-export const toSvg = async (score) => await engrave(score);
+export const toSvg = async(score) => await engrave(score);
 
 /**
  * Export a score as a Standard MIDI File.
@@ -164,7 +164,7 @@ export const toSvg = async (score) => await engrave(score);
  * @param {object} score A Score.
  * @returns {Promise<Blob>} The MIDI file.
  */
-export const toMidi = async (score) => new Blob(
+export const toMidi = async(score) => new Blob(
     // Verovio hands MIDI back base64-encoded rather than as bytes (P0-FINDINGS-T2 decision 9).
     [fromBase64(await engraveMidi(toAbc(score), 'abc'))],
     {type: 'audio/midi'}
@@ -177,7 +177,7 @@ export const toMidi = async (score) => new Blob(
  * @param {object} options {scale}.
  * @returns {Promise<Blob>} The image.
  */
-export const toPng = async (score, options = {}) => {
+export const toPng = async(score, options = {}) => {
     const scale = Number(options.scale) || DEFAULT_SCALE;
     const pixels = await rasterise(await engrave(score), {scale});
     return new Blob([await encodePng(pixels, scale)], {type: 'image/png'});
@@ -193,7 +193,7 @@ export const toPng = async (score, options = {}) => {
  * @param {object} options {scale, title}.
  * @returns {Promise<Blob>} The PDF.
  */
-export const toPdf = async (score, options = {}) => {
+export const toPdf = async(score, options = {}) => {
     const scale = Number(options.scale) || DEFAULT_SCALE;
     const pixels = await rasterise(await engrave(score), {scale});
     return new Blob([await encodePdf(pixels, {scale, title: options.title})], {type: 'application/pdf'});
@@ -209,7 +209,7 @@ export const toPdf = async (score, options = {}) => {
  */
 export const EXPORTS = [
     {format: 'midi', extension: 'mid', build: toMidi},
-    {format: 'svg', extension: 'svg', build: async (score) => new Blob([await toSvg(score)], {type: 'image/svg+xml'})},
+    {format: 'svg', extension: 'svg', build: async(score) => new Blob([await toSvg(score)], {type: 'image/svg+xml'})},
     {format: 'png', extension: 'png', build: toPng},
     {format: 'pdf', extension: 'pdf', build: toPdf},
 ];

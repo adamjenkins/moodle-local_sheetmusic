@@ -105,7 +105,7 @@ export const readFile = (file) => new Promise((resolve, reject) => {
  * @returns {Promise<object>} {kind, source, warnings}.
  * @throws {Error} If the file cannot be read as a score.
  */
-export const importBytes = async (name, bytes, options = {}) => {
+export const importBytes = async(name, bytes, options = {}) => {
     const kind = detect(name, bytes);
     if (kind === 'abc') {
         // ABC is stored as it was written, not round-tripped through the model: a tune with a

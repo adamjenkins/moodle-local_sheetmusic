@@ -64,7 +64,7 @@ const byteLength = (text) => (typeof TextEncoder === 'function'
  * @param {HTMLElement} element The placeholder to hydrate.
  * @returns {Promise<void>}
  */
-export const hydrate = async (element) => {
+export const hydrate = async(element) => {
     if (!element || element.dataset[RENDERED]) {
         return;
     }
@@ -123,7 +123,7 @@ export const hydrate = async (element) => {
  * @param {ParentNode} root The subtree to search.
  * @returns {Promise<void[]>}
  */
-export const hydrateAll = async (root) => {
+export const hydrateAll = async(root) => {
     const blocks = [...root.querySelectorAll('.sheetmusic-block')];
     const results = [];
     for (const block of blocks) {
@@ -146,7 +146,7 @@ export const hydrateAll = async (root) => {
  * @param {ParentNode} root The subtree to search.
  * @returns {Promise<void>}
  */
-export const observe = async (root) => {
+export const observe = async(root) => {
     if (typeof window.IntersectionObserver !== 'function') {
         await hydrateAll(root);
         return;

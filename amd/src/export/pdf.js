@@ -81,7 +81,7 @@ const literal = (text) => String(text).replace(/[\\()]/g, '\\$&').replace(/[^\x2
  * @returns {Promise<Uint8Array>} The PDF file.
  * @throws {Error} If the pixel data is not the size the dimensions claim.
  */
-export const encodePdf = async (image, options = {}) => {
+export const encodePdf = async(image, options = {}) => {
     const {width, height, data} = image;
     if (!width || !height || data.length !== width * height * 4) {
         throw new Error(`local_sheetmusic: ${width}x${height} needs ${width * height * 4} bytes `

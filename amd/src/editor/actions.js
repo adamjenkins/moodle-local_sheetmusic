@@ -190,6 +190,11 @@ const buildEvent = (entry, pitch) => normaliseEvent(entry.rest
  *                   changed, which is what makes the caller re-serialise and re-engrave.
  *                   `announce` names what to say: {key, index}.
  */
+// This is a dispatch table: the complexity score counts the switch arms, one per editing command,
+// and splitting fourteen three-line cases into fourteen named functions would add indirection
+// without making any of them easier to follow. Moodle core takes the same exemption in
+// lib/amd/src/chartjs-lazy.js.
+// eslint-disable-next-line complexity
 export const apply = (context, action) => {
     const {score} = context;
     // The model's undo stack holds the document, not where the author was looking, so the two
@@ -243,7 +248,12 @@ export const apply = (context, action) => {
             if (!events.length) {
                 return still();
             }
-            const from = selection === null ? (action.by > 0 ? -1 : events.length) : selection;
+            // With nothing selected, step in from whichever end the movement is heading away
+            // from, so the first press lands on the first or last event rather than the second.
+            let from = selection;
+            if (from === null) {
+                from = action.by > 0 ? -1 : events.length;
+            }
             const at = Math.max(0, Math.min(events.length - 1, from + action.by));
             return {selection: at, entry, changed: false, announce: {key: 'selected', index: at}};
         }
@@ -256,9 +266,14 @@ export const apply = (context, action) => {
             const pitch = action.octave === undefined
                 ? nearestOctave(action.step || 'C', reference)
                 : {step: action.step, octave: action.octave};
-            const at = action.type === 'insertAt'
-                ? Math.max(0, Math.min(events.length, action.at))
-                : (selection === null ? events.length : selection + 1);
+            let at;
+            if (action.type === 'insertAt') {
+                at = Math.max(0, Math.min(events.length, action.at));
+            } else if (selection === null) {
+                at = events.length;
+            } else {
+                at = selection + 1;
+            }
             events.splice(at, 0, buildEvent(mode, pitch));
             commit(events);
             return {selection: at, entry: {...entry, alter: null}, changed: true, announce: {key: 'added', index: at}};

@@ -333,7 +333,7 @@ export const quantise = (parsed, options = {}) => {
  *                            the caller is contractually required to show them.
  * @throws {Error} On a file this quantiser cannot read.
  */
-export const fromMidi = async (buffer, options = {}) => {
+export const fromMidi = async(buffer, options = {}) => {
     const parse = await ensureParser();
     const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
     if (bytes.length > MAX_IMPORT_BYTES) {
