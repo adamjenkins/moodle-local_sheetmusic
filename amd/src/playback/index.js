@@ -129,7 +129,6 @@ export const attach = async(block, spec) => {
         strings,
         id,
         onToggle: () => {
-            // eslint-disable-next-line no-use-before-define
             toggle();
         },
         onRate: (rate) => {

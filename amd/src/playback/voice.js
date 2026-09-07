@@ -107,8 +107,8 @@ export const createVoice = (context, destination, note) => {
     const release = (at) => {
         const from = Math.max(at, start + ATTACK);
         gain.gain.cancelScheduledValues(from);
-        // setValueAtTime with the value the ramp had reached, or the release starts from
-        // whatever the last scheduled point was and the note jumps in level as it ends.
+        // Pinned to the value the ramp had reached, or the release starts from whatever the
+        // last scheduled point was and the note jumps in level as it ends.
         gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0002), from);
         gain.gain.exponentialRampToValueAtTime(0.0001, from + RELEASE);
         stopAt = from + RELEASE;

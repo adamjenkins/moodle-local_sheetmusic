@@ -80,8 +80,12 @@ const cancelFrame = (handle) => {
  */
 export const createTransport = (spec) => {
     const {context, pool, notes, durationMs, cursor} = spec;
-    const onState = spec.onState || (() => {});
-    const onProgress = spec.onProgress || (() => {});
+    const onState = spec.onState || (() => {
+        // A caller that does not care what the transport is doing.
+    });
+    const onProgress = spec.onProgress || (() => {
+        // A caller that does not draw a progress indicator.
+    });
 
     /** @type {number} Playing speed as a multiple of the score's own tempo. */
     let rate = 1;
@@ -133,7 +137,6 @@ export const createTransport = (spec) => {
             next++;
         }
         if (positionMs() >= durationMs + TAIL_MS) {
-            // eslint-disable-next-line no-use-before-define
             finish();
         }
     };
