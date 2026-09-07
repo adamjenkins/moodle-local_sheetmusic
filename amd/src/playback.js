@@ -1,4 +1,3 @@
-<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,17 +14,18 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Version details for local_sheetmusic.
+ * Playback, under the module name the rest of the suite uses.
  *
- * @package    local_sheetmusic
+ * The same reason `editor.js` exists: Moodle resolves an AMD module name to
+ * `amd/build/<name>.min.js` and to nothing else - `core_requirejs::find_one_amd_module()`
+ * appends `.min.js` with no index-file fallback (`lib/classes/requirejs.php:47-65`). A
+ * directory named `playback` is therefore invisible to consumers, so this file makes
+ * `local_sheetmusic/playback` resolve while the transport itself lives in `playback/index.js`
+ * beside the pieces it is built from.
+ *
+ * @module     local_sheetmusic/playback
  * @copyright  2026 Adam Jenkins <adam@wisecat.net>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'local_sheetmusic';
-$plugin->version   = 2026090700;
-$plugin->requires  = 2024100700;
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.1.0';
+export {attach, stopAll} from 'local_sheetmusic/playback/index';

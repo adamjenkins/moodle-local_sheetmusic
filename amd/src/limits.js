@@ -37,6 +37,31 @@ export const MAX_SOURCE_BYTES = 51200;
 export const MAX_IMPORT_BARS = 2000;
 
 /**
+ * The most notes that may sound at once during playback.
+ *
+ * Each voice is an oscillator pair, a filter and a gain node, and Web Audio gives no back
+ * pressure: a score asking for more voices than the device can mix does not slow down, it
+ * distorts. Twenty-four is far above anything exercise-level notation reaches - a four-part
+ * chorale needs four - and well below where mixing costs become audible. Beyond it the oldest
+ * sounding voice is released early, which is what a hardware synthesiser does.
+ *
+ * @type {number}
+ */
+export const MAX_VOICES = 24;
+
+/**
+ * The most notes a score may carry before it is refused for playback.
+ *
+ * Playback holds every note of the score in memory as a scheduling record, and the transport
+ * walks that list. `MAX_SOURCE_BYTES` already bounds what may be engraved, but a small source
+ * can expand into a large number of notes - a repeat with many voices - so the note count is
+ * bounded where the notes actually appear rather than inferred from the source length.
+ *
+ * @type {number}
+ */
+export const MAX_PLAYBACK_NOTES = 20000;
+
+/**
  * The largest import file that may be read, in bytes.
  *
  * Applies to MIDI and to both flavours of MusicXML. A compressed `.mxl` is a ZIP, and it is

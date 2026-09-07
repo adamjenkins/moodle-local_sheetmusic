@@ -10,9 +10,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {setToolkitFactory} from 'local_sheetmusic/engraver';
+import {setEngineFactory, setToolkitFactory} from 'local_sheetmusic/engraver';
 
-setToolkitFactory(async () => {
+const build = async () => {
     const [{default: createVerovioModule}, {VerovioToolkit, enableLog, LOG_OFF}] = await Promise.all([
         import('../../thirdparty/verovio/verovio-module.js'),
         import('../../thirdparty/verovio/verovio.js'),
@@ -21,4 +21,11 @@ setToolkitFactory(async () => {
     const toolkit = new VerovioToolkit(module);
     enableLog(LOG_OFF, module);
     return toolkit;
-});
+};
+
+setToolkitFactory(build);
+
+// Playback and MIDI export each run on an engine of their own, because Verovio's ABC importer
+// keeps the last non-empty key signature it read in engine-wide state. Every call must build a
+// new one, or the tests would pass while production leaked.
+setEngineFactory(build);

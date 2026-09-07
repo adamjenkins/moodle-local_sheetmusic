@@ -25,8 +25,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {render as engrave} from 'local_sheetmusic/engraver';
+import {render as engrave, scaleFor} from 'local_sheetmusic/engraver';
 import {MAX_SOURCE_BYTES} from 'local_sheetmusic/limits';
+import {attach as attachPlayback} from 'local_sheetmusic/playback';
 
 /** @type {string} Marks a placeholder as already rendered. */
 const RENDERED = 'sheetmusicRendered';
@@ -84,9 +85,13 @@ export const hydrate = async(element) => {
         return;
     }
 
+    // The site's staff size, chosen by the admin and carried on the placeholder so that the
+    // client never has to ask the server for it.
+    const options = {scale: scaleFor(element.dataset.sheetmusicScale)};
+
     let svg;
     try {
-        ({svg} = await engrave(source, format, {}));
+        ({svg} = await engrave(source, format, options));
     } catch (error) {
         // Leave the readable source in place: a failed render must never blank the content.
         element.dataset.sheetmusicError = '1';
@@ -115,6 +120,12 @@ export const hydrate = async(element) => {
         pre.classList.add('accesshide');
     }
     element.insertBefore(figure, element.firstChild);
+
+    // Playback is offered where the site allows it and the browser can produce sound. Nothing
+    // is loaded or built here: attaching adds a button, and the first press does the work.
+    if (element.dataset.sheetmusicPlay === '1') {
+        await attachPlayback(element, {source, format, options});
+    }
 };
 
 /**

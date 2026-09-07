@@ -44,6 +44,7 @@
  */
 
 import {ensureParser, fromAbc} from 'local_sheetmusic/abc';
+import {attach as attachPlayback, stopAll as stopPlayback} from 'local_sheetmusic/playback';
 import {render as engrave} from 'local_sheetmusic/engraver';
 import {EXPORTS} from 'local_sheetmusic/export';
 import {ACCEPT, importBytes, readFile} from 'local_sheetmusic/editor/importing';
@@ -85,6 +86,12 @@ export const createSurface = (spec) => {
     const preview = make('div', {
         className: 'sheetmusic-editor-preview', role: 'img', 'aria-label': strings.editorpreview,
     });
+    // The transport goes in the pane, never inside `preview`: that element is the labelled
+    // image, and a button inside a role="img" is not reachable.
+    const previewPane = make('div', {className: 'sheetmusic-editor-pane'}, [
+        make('span', {className: 'sheetmusic-editor-legend', textContent: strings.editorpreview}),
+        preview,
+    ]);
     const file = make('input', {type: 'file', id: `${id}-file`, className: 'sheetmusic-editor-file', accept: ACCEPT});
     const chooser = make('select', {id: `${id}-export`, className: 'form-select'});
     EXPORTS.forEach((entry) => {
@@ -105,14 +112,12 @@ export const createSurface = (spec) => {
                 textarea,
                 make('p', {id: `${id}-sourcehelp`, className: 'form-text', textContent: strings.editorsourcehelp}),
             ]),
-            make('div', {className: 'sheetmusic-editor-pane'}, [
-                make('span', {className: 'sheetmusic-editor-legend', textContent: strings.editorpreview}),
-                preview,
-            ]),
+            previewPane,
         ]),
     ]);
 
-    const state = {error: null, timer: null, token: 0, imported: null, previous: '', synced: null, tab: 'notes'};
+    const state = {error: null, timer: null, token: 0, imported: null, previous: '', synced: null,
+        tab: 'notes', playback: null};
 
     /**
      * Show a message in the surface, or clear it.
@@ -145,6 +150,13 @@ export const createSurface = (spec) => {
     const draw = async() => {
         const token = ++state.token;
 
+        // The score is about to change under it, so the transport that was playing the old one
+        // goes first. Re-attaching after a successful engrave gives the new score its own.
+        if (state.playback) {
+            state.playback.detach();
+            state.playback = null;
+        }
+
         // An empty surface is not a broken score. Opening the editor with nothing in it used to
         // engrave '' and immediately show the red "this cannot be shown" alert, which reads as a
         // failure before the author has typed anything.
@@ -171,6 +183,17 @@ export const createSurface = (spec) => {
             }
             state.error = null;
             say(null);
+            const attached = await attachPlayback(previewPane, {
+                source: textarea.value,
+                format: 'abc',
+                options: {xmlIdChecksum: true},
+                figure: preview,
+            });
+            if (token === state.token) {
+                state.playback = attached;
+            } else if (attached) {
+                attached.detach();
+            }
         } catch (error) {
             if (token !== state.token) {
                 return;
@@ -366,6 +389,13 @@ export const createSurface = (spec) => {
         destroy: () => {
             window.clearTimeout(state.timer);
             state.token++;
+            // A dialogue that closes while a score is playing must not leave it playing.
+            if (state.playback) {
+                state.playback.detach();
+                state.playback = null;
+            } else {
+                stopPlayback();
+            }
             root.remove();
         },
     };

@@ -35,6 +35,24 @@ import {VerovioToolkit, enableLog, LOG_OFF} from '../thirdparty/verovio/verovio.
 
 const EVENT = 'local_sheetmusic/verovio-ready';
 
+/**
+ * Build a toolkit on an engine instance of its own.
+ *
+ * Playback needs this. Verovio's ABC importer keeps the last non-empty key signature it read
+ * in state that outlives loadData() and is shared by every toolkit built on one engine
+ * instance, so a score whose key signature is empty - C major, A minor, any dorian - is
+ * rendered to MIDI in whatever key the previous ABC score was in. Measured against Verovio
+ * 6.3.0 in P4-FINDINGS.md: only renderToMIDI() is affected, and destroying the engine is the
+ * only thing that clears it.
+ *
+ * @returns {Promise<object>} A toolkit nothing has loaded into yet.
+ */
+const create = async () => {
+    const instance = await createVerovioModule();
+    enableLog(LOG_OFF, instance);
+    return new VerovioToolkit(instance);
+};
+
 (async () => {
     try {
         const instance = await createVerovioModule();
@@ -42,7 +60,7 @@ const EVENT = 'local_sheetmusic/verovio-ready';
         // Verovio warns about missing ABC title fields; silence it rather than filling the
         // console on every page that shows a score.
         enableLog(LOG_OFF, instance);
-        window.dispatchEvent(new CustomEvent(EVENT, {detail: {toolkit}}));
+        window.dispatchEvent(new CustomEvent(EVENT, {detail: {toolkit, create}}));
     } catch (error) {
         window.dispatchEvent(new CustomEvent(EVENT, {detail: {error}}));
     }

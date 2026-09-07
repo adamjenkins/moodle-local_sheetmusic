@@ -13,7 +13,7 @@
 
 import assert from 'node:assert';
 import './dom.js';
-import {render, toMidi, version, setToolkitFactory} from 'local_sheetmusic/engraver';
+import {render, renderWithAudio, toMidi, version, setEngineFactory, setToolkitFactory} from 'local_sheetmusic/engraver';
 import {finishes} from './spec.js';
 
 const FIXTURE = 'X:1\nM:4/4\nK:G\n|GABc dedB|';
@@ -21,7 +21,7 @@ const EXPECTED = ['g4', 'a4', 'b4', 'c5', 'd5', 'e5', 'd5', 'b4'];
 
 // Node cannot resolve the browser's wwwroot-based URL, so the vendored files are imported
 // by path here. Everything downstream of this is the production code path.
-setToolkitFactory(async () => {
+const build = async () => {
     const [{default: createVerovioModule}, {VerovioToolkit, enableLog, LOG_OFF}] = await Promise.all([
         import('../../thirdparty/verovio/verovio-module.js'),
         import('../../thirdparty/verovio/verovio.js'),
@@ -30,7 +30,10 @@ setToolkitFactory(async () => {
     const toolkit = new VerovioToolkit(module);
     enableLog(LOG_OFF, module);
     return toolkit;
-});
+};
+
+setToolkitFactory(build);
+setEngineFactory(build);
 
 const done = finishes('engraver');
 

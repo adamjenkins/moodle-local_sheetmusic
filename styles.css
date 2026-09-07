@@ -146,3 +146,57 @@
 .sheetmusic-editor-listing {
     margin: 0;
 }
+
+/* Playback: the transport, and the note being heard. */
+
+.sheetmusic-playback {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.sheetmusic-playback-label {
+    margin-bottom: 0;
+}
+
+/* Two class selectors, because Bootstrap's own .form-range is width:100% and plugin styles
+   are aggregated BEFORE the theme's (theme_config puts plugins, then parents, then theme), so
+   an equally specific rule here loses and the slider takes a whole line to itself. */
+.sheetmusic-playback .sheetmusic-playback-tempo {
+    flex: 0 0 auto;
+    width: 8rem;
+}
+
+.sheetmusic-playback-tempovalue {
+    font-variant-numeric: tabular-nums;
+    min-width: 3.5em;
+}
+
+/*
+ * The note currently sounding.
+ *
+ * Colour alone would fail WCAG 1.4.1, so the mark is a colour change *and* a weight change:
+ * stroking the glyph in its own fill thickens it visibly, which survives greyscale, colour
+ * blindness and a printed page. paint-order keeps the stroke behind the glyph so the notehead
+ * does not lose its shape as it thickens.
+ */
+.sheetmusic-render .sheetmusic-playing,
+.sheetmusic-editor-preview .sheetmusic-playing {
+    fill: #0f6cbf;
+    paint-order: stroke fill;
+    stroke: #0f6cbf;
+    stroke-width: 12;
+}
+
+/* In forced-colours mode the author's colours are discarded, so ask for the system's own
+   highlight rather than leaving the mark invisible. */
+@media (forced-colors: active) {
+    .sheetmusic-render .sheetmusic-playing,
+    .sheetmusic-editor-preview .sheetmusic-playing {
+        fill: Highlight;
+        forced-color-adjust: none;
+        stroke: Highlight;
+    }
+}

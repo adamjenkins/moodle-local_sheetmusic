@@ -29,6 +29,14 @@
     "./midi": "./amd/src/midi.js",
     "./model": "./amd/src/model.js",
     "./musicxml": "./amd/src/musicxml.js",
+    "./playback": "./amd/src/playback.js",
+    "./playback/audio": "./amd/src/playback/audio.js",
+    "./playback/controls": "./amd/src/playback/controls.js",
+    "./playback/cursor": "./amd/src/playback/cursor.js",
+    "./playback/events": "./amd/src/playback/events.js",
+    "./playback/index": "./amd/src/playback/index.js",
+    "./playback/scheduler": "./amd/src/playback/scheduler.js",
+    "./playback/voice": "./amd/src/playback/voice.js",
     "./render": "./amd/src/render.js"
   },
   "devDependencies": {

@@ -39,4 +39,11 @@ if ($hassiteconfig) {
             'l' => new lang_string('scalelarge', 'local_sheetmusic'),
         ]
     ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'local_sheetmusic/playback',
+        new lang_string('playback', 'local_sheetmusic'),
+        new lang_string('playback_desc', 'local_sheetmusic'),
+        1
+    ));
 }

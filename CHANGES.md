@@ -5,6 +5,26 @@ All notable changes to `local_sheetmusic` are documented here.
 ## [Unreleased]
 
 - Initial development. Nothing released yet.
+- Added playback (`local_sheetmusic/playback`). Any rendered score gains a transport: play and
+  stop, a cursor marking the note being heard, and a speed control from 25% to 200% of the
+  score's own tempo. The sound is synthesised with Web Audio — no samples, no soundfont, no
+  download, no server — so the plugin gains no assets and works offline. Nothing is built until
+  the reader presses play: a page of examples engraves as it is scrolled and stops there. One
+  score plays at a time per page, playback never starts on its own, and where the browser has no
+  Web Audio no control is offered rather than a dead button. The editor's preview gets the same
+  transport, and closing the dialogue or editing the score silences it.
+- Added `engraver.renderWithAudio()`, which returns the SVG, the MIDI and the timemap from one
+  load. Playback takes what sounds from the MIDI and what is highlighted from the timemap: the
+  SVG does not carry sounding accidentals, and a tie is two noteheads but one sound.
+- **Fixed: MIDI export could carry the wrong key signature.** Verovio's ABC importer keeps the
+  last non-empty key signature it read in state shared across an engine instance, so a score
+  whose key signature is empty — C major, A minor, any dorian — was exported and played in the
+  previous score's key. Everything that produces MIDI now runs on a private, single-use engine,
+  which is the only thing measured to clear it (dev-docs `P4-FINDINGS.md` section 2).
+- Added the `local_sheetmusic/playback` site setting (on by default) to turn playback off, and
+  `\local_sheetmusic\local\display` to carry it and the staff size to the client on the
+  placeholder. **`local_sheetmusic/defaultscale` now actually does something** — it was
+  previously declared in `settings.php` and read by nothing.
 - Added the document model (`local_sheetmusic/model`) and the ABC serialiser
   (`local_sheetmusic/abc`), with abcjs 6.7.0 vendored under `thirdparty/abcjs/` as the ABC
   parser. `toAbc()` emits the canonical stored form: no leading newline, LF endings, and

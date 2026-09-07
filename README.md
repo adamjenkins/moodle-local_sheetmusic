@@ -1,8 +1,8 @@
 # local_sheetmusic
 
 The shared engine behind the **sheetmusic** Moodle plugin suite: a document model, ABC and
-MusicXML serialisers, a MIDI importer, and a bundled [Verovio](https://www.verovio.org/)
-engraver, all running client-side.
+MusicXML serialisers, a MIDI importer, playback, and a bundled
+[Verovio](https://www.verovio.org/) engraver, all running client-side.
 
 This plugin provides no user interface of its own. It exists so that its two consumers render
 notation identically:
@@ -29,6 +29,18 @@ tuplets in it still opens, still engraves and can still be edited as ABC in the 
 note-entry tab says plainly that it cannot place notes on that score instead of quietly dropping
 what it has no room for. Double sharps and double flats are kept and displayed if an import
 brings them in, but the toolbar and the keyboard offer only single accidentals.
+
+## Playing a score
+
+Every rendered score carries a play button, a cursor that marks the note being heard, and a speed
+control. The sound is **synthesised in the browser** with Web Audio: no samples are downloaded,
+nothing is sent to a server, and the plugin carries no audio files. It is a clean synthesised tone
+rather than a recorded instrument — enough to hear an exercise, check an interval or follow a
+line, and not a substitute for a real performance.
+
+Playback never starts on its own, only one score plays at a time, and a browser without Web Audio
+is shown no control rather than one that does nothing. Site administrators can turn it off for the
+whole site under *Site administration → Plugins → Local plugins → Sheet music*.
 
 ## Requirements
 
