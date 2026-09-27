@@ -3,6 +3,23 @@
 All notable changes to `local_sheetmusic` are documented here.
 The full history is in [`changelog.md`](changelog.md).
 
+## [Unreleased]
+
+### Changed
+
+- **Declare Moodle 5.3 support.** `version.php` now states the supported range as Moodle 4.5 to
+  5.3 (`$plugin->supported = [405, 503]`).
+
+### Fixed
+
+- **Scores stay readable in Boost's dark colour mode (Moodle 5.3).** The engine engraves in
+  black, so on a dark page a rendered score was black notation on a dark background. A rendered
+  score now keeps a white paper background in dark mode; nothing changes in light mode or on
+  earlier Moodle versions.
+- **The staff editor's focus ring is clearer in dark colour mode (Moodle 5.3).** The ring is
+  drawn on the modal around the score, where Moodle blue only just met the 3:1 contrast minimum; in
+  dark mode it now uses Boost's own dark-mode focus colour. Light mode is unchanged.
+
 ## [0.2.0] - 2026-09-07
 
 Scores can be played.

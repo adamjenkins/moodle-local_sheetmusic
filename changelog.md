@@ -3,6 +3,19 @@
 All notable changes to `local_sheetmusic` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Declare Moodle 5.3 support: `$plugin->supported = [405, 503]`.
+
+### Fixed
+
+- A rendered score keeps a white background under Boost's dark colour mode (Moodle 5.3), where
+  the black notation was otherwise drawn on a dark page.
+- The staff editor's keyboard focus ring uses Boost's dark-mode focus colour under the dark
+  colour mode (Moodle 5.3), where Moodle blue only just met the 3:1 contrast minimum on the dark modal surface.
+
 ## [0.2.0] - 2026-09-07
 
 ### Added

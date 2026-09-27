@@ -8,6 +8,15 @@
     max-width: 100%;
 }
 
+/* Verovio engraves in black (the SVG sets color="black" and fill="#000000"), so in Boost's dark
+   colour mode (Moodle 5.3+, which sets data-bs-theme="dark" on the html element) a rendered
+   score would be black notation on a dark page. Give the score its paper back. The editor panes
+   already have a white background of their own. Where there are no colour modes the attribute
+   never appears and this rule does nothing. */
+[data-bs-theme="dark"] .sheetmusic-render svg {
+    background: #fff;
+}
+
 .sheetmusic-editor-toolbar {
     align-items: flex-end;
     display: flex;
@@ -119,6 +128,17 @@
 .sheetmusic-editor-score:focus-visible {
     outline: 3px solid #0f6cbf;
     outline-offset: 2px;
+}
+
+/* The ring sits outside the white pane, on the modal behind it, so in Boost's dark colour mode
+   (Moodle 5.3+) Moodle blue on the dark modal surface (#1d2125) only just reaches 3:1, the
+   minimum a focus indicator needs. Take Boost's own dark-mode focus border instead (about 4.4:1
+   there; theme/boost/scss/moodle/dark.scss); the fallback is that token's value for the
+   default brand colour, for a theme that sets data-bs-theme without Boost's design system tokens
+   (they appear in Moodle 5.2). Light mode is unchanged. */
+[data-bs-theme="dark"] .sheetmusic-editor-score:focus,
+[data-bs-theme="dark"] .sheetmusic-editor-score:focus-visible {
+    outline-color: var(--mds-border-interactive-primary-default, #3f89cc);
 }
 
 .sheetmusic-editor-score svg {
