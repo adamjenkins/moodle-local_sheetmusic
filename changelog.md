@@ -3,6 +3,16 @@
 All notable changes to `local_sheetmusic` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.2] - 2026-10-04
+
+### Changed
+
+- Maturity raised from Alpha to Beta (`$plugin->maturity = MATURITY_BETA`).
+- composer.json's `moodle/moodle` constraint is now `^4.5 || ^5.0` (was `>=4.5 <5.4`), so new 5.x
+  releases are not excluded.
+- CI tests `MOODLE_503_STABLE` (PHP 8.3-8.4, PostgreSQL 17, MariaDB 11.4) as blocking rows,
+  replacing the non-blocking moodle.git `main` rows.
+
 ## [0.2.1] - 2026-10-04
 
 ### Added
