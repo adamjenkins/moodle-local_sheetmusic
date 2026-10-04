@@ -1,0 +1,10 @@
+{
+    "name": "adamjenkins/moodle-local_sheetmusic",
+    "description": "The shared engine behind the sheetmusic Moodle plugin suite: a document model, ABC and MusicXML serialisers, a MIDI importer, playback, and a bundled Verovio engraver, all running client-side",
+    "type": "moodle-local",
+    "require": {
+        "moodle/moodle": ">=4.5 <5.4",
+        "moodle/composer-installer": "^1.0"
+    },
+    "license": "GPL-3.0-or-later"
+}

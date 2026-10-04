@@ -3,7 +3,12 @@
 All notable changes to `local_sheetmusic` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.1] - 2026-10-04
+
+### Added
+
+- `composer.json` (package `adamjenkins/moodle-local_sheetmusic`, type `moodle-local`), requiring
+  `moodle/moodle` `>=4.5 <5.4` to match `$plugin->supported`.
 
 ### Changed
 

@@ -3,7 +3,12 @@
 All notable changes to `local_sheetmusic` are documented here.
 The full history is in [`changelog.md`](changelog.md).
 
-## [Unreleased]
+## [0.2.1] - 2026-10-04
+
+### Added
+
+- **`composer.json`.** The plugin can be installed with Composer as
+  `adamjenkins/moodle-local_sheetmusic` (type `moodle-local`), on Moodle 4.5 to 5.3.
 
 ### Changed
 
