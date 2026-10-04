@@ -9,15 +9,13 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
-    # moodle.git main rows are non-blocking (experimental: true): main is a moving target.
-    continue-on-error: ${{ matrix.experimental == true }}
 
     services:
       postgres:
         # Pinned to the lowest PostgreSQL that satisfies every branch in the matrix:
         # Moodle 5.2 requires 16+, 5.1 requires 15+, 5.0 requires 14+, 4.5 requires 13+
-        # (each branch's own admin/environment.xml). moodle.git main (5.3) requires 17+
-        # (environment.xml 5.3 block), so the main rows override the image via the matrix.
+        # (each branch's own admin/environment.xml). MOODLE_503_STABLE (5.3) requires 17+
+        # (environment.xml 5.3 block), so the 5.3 rows override the image via the matrix.
         image: ${{ matrix.database == 'pgsql' && (matrix.pgsql-image || 'postgres:16') || '' }}
         env:
           POSTGRES_USER: 'postgres'
@@ -28,7 +26,7 @@ jobs:
 
       mariadb:
         # Lowest MariaDB that satisfies every branch: 5.0/5.1/5.2 require 10.11+,
-        # 4.5 requires 10.6.7+ (each branch's own admin/environment.xml). moodle.git main
+        # 4.5 requires 10.6.7+ (each branch's own admin/environment.xml). MOODLE_503_STABLE
         # (5.3) requires 11.4+ (environment.xml 5.3 block), overridden via the matrix.
         image: ${{ matrix.database == 'mariadb' && (matrix.mariadb-image || 'mariadb:10.11') || '' }}
         env:
@@ -53,9 +51,9 @@ jobs:
       # engine and has no Behat features of its own; its behaviour is proved by the PHPUnit
       # suite and by the JavaScript specs in the separate job below.
       # 4.5 refuses PHP 8.4 outright (restrict_php_version_84 in its environment.xml).
-      # The last two rows run moodle.git main (= 5.3beta: PHP 8.3-8.4, PostgreSQL 17+,
-      # MariaDB 11.4+ per its environment.xml 5.3 block). They are NON-BLOCKING
-      # (experimental: true -> job-level continue-on-error) and skip the Grunt step.
+      # The last two rows run MOODLE_503_STABLE (5.3: PHP 8.3-8.4, PostgreSQL 17+,
+      # MariaDB 11.4+ per its environment.xml 5.3 block). They are blocking like the
+      # other rows and skip the Grunt step (it runs only on MOODLE_502_STABLE).
       matrix:
         include:
           - {moodle-branch: 'MOODLE_405_STABLE', php: '8.1', database: 'mariadb'}
@@ -66,8 +64,8 @@ jobs:
           - {moodle-branch: 'MOODLE_501_STABLE', php: '8.4', database: 'pgsql'}
           - {moodle-branch: 'MOODLE_502_STABLE', php: '8.3', database: 'mariadb'}
           - {moodle-branch: 'MOODLE_502_STABLE', php: '8.4', database: 'pgsql'}
-          - {moodle-branch: 'main', php: '8.4', database: 'pgsql', experimental: true, pgsql-image: 'postgres:17', mariadb-image: 'mariadb:11.4'}
-          - {moodle-branch: 'main', php: '8.3', database: 'mariadb', experimental: true, pgsql-image: 'postgres:17', mariadb-image: 'mariadb:11.4'}
+          - {moodle-branch: 'MOODLE_503_STABLE', php: '8.4', database: 'pgsql', pgsql-image: 'postgres:17', mariadb-image: 'mariadb:11.4'}
+          - {moodle-branch: 'MOODLE_503_STABLE', php: '8.3', database: 'mariadb', pgsql-image: 'postgres:17', mariadb-image: 'mariadb:11.4'}
 
     steps:
       - name: Check out repository code
