@@ -16,9 +16,15 @@ labels:
   #   fully-free | freemium | paid-service | external-account
   #   donation-supported | commercial-support-available
   - fully-free
-# screenshots:
-#   - path: .camp/screenshots/overview.png
-#     caption: Main view
+screenshots:
+  - path: .camp/screenshots/01-musicxml-score.png
+    caption: A melody stored as MusicXML, engraved on a course page with its Play button and speed control.
+  - path: .camp/screenshots/02-playback-slow.png
+    caption: 'Playback at 50% speed: the cursor marks the note being heard.'
+  - path: .camp/screenshots/03-staff-editor.png
+    caption: 'The note editor: click or type notes onto the staff; the status line reports the selected note.'
+  - path: .camp/screenshots/04-admin-settings.png
+    caption: 'Administrator settings: default staff size and whether scores can be played.'
 links:
   docs: https://github.com/adamjenkins/moodle-local_sheetmusic#readme
   issues: https://github.com/adamjenkins/moodle-local_sheetmusic/issues
