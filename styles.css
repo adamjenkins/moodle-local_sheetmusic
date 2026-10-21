@@ -59,7 +59,7 @@
 
 .sheetmusic-editor-preview {
     background: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.125);
+    border: 1px solid var(--mds-border-default, var(--bs-border-color, rgba(0, 0, 0, 0.125)));
     min-height: 8rem;
     overflow-x: auto;
     padding: 0.5rem;
@@ -118,7 +118,7 @@
    be suppressed. */
 .sheetmusic-editor-score {
     background: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.125);
+    border: 1px solid var(--mds-border-default, var(--bs-border-color, rgba(0, 0, 0, 0.125)));
     min-height: 8rem;
     overflow-x: auto;
     padding: 0.5rem;
@@ -126,7 +126,7 @@
 
 .sheetmusic-editor-score:focus,
 .sheetmusic-editor-score:focus-visible {
-    outline: 3px solid #0f6cbf;
+    outline: 3px solid var(--mds-focus-default, var(--bs-primary, #0f6cbf));
     outline-offset: 2px;
 }
 
