@@ -104,4 +104,51 @@ final class display_test extends \advanced_testcase {
             'data-sheetmusic-play' => '0',
         ], display::attributes());
     }
+
+    /**
+     * A score's own staff-size token wins over the site default; an unknown size is ignored.
+     *
+     * @return void
+     */
+    public function test_attributes_scale_token(): void {
+        set_config('defaultscale', 's', 'local_sheetmusic');
+        $tokens = ['sheetmusic', 'sheetmusic-abc', 'sheetmusic-scale-l'];
+        $this->assertSame('l', display::attributes($tokens)['data-sheetmusic-scale']);
+        $tokens = ['sheetmusic', 'sheetmusic-abc', 'sheetmusic-scale-enormous'];
+        $this->assertSame('s', display::attributes($tokens)['data-sheetmusic-scale']);
+    }
+
+    /**
+     * Playback tokens override the default in both directions, and noplay wins a tie.
+     *
+     * @return void
+     */
+    public function test_attributes_play_tokens(): void {
+        set_config('playback', 0, 'local_sheetmusic');
+        $this->assertSame('1', display::attributes(['sheetmusic', 'sheetmusic-play'])['data-sheetmusic-play']);
+        $this->assertSame('0', display::attributes(['sheetmusic'])['data-sheetmusic-play']);
+
+        set_config('playback', 1, 'local_sheetmusic');
+        $this->assertSame('0', display::attributes(['sheetmusic', 'sheetmusic-noplay'])['data-sheetmusic-play']);
+        $this->assertSame('0', display::attributes(
+            ['sheetmusic', 'sheetmusic-play', 'sheetmusic-noplay']
+        )['data-sheetmusic-play']);
+        $this->assertSame('1', display::attributes(['sheetmusic'])['data-sheetmusic-play']);
+    }
+
+    /**
+     * With overrides turned off, the site default applies whatever the score asks for.
+     *
+     * @return void
+     */
+    public function test_attributes_play_tokens_ignored_without_override(): void {
+        $this->assertTrue(display::playback_overridable());
+        set_config('playbackoverride', 0, 'local_sheetmusic');
+        $this->assertFalse(display::playback_overridable());
+
+        set_config('playback', 0, 'local_sheetmusic');
+        $this->assertSame('0', display::attributes(['sheetmusic', 'sheetmusic-play'])['data-sheetmusic-play']);
+        set_config('playback', 1, 'local_sheetmusic');
+        $this->assertSame('1', display::attributes(['sheetmusic', 'sheetmusic-noplay'])['data-sheetmusic-play']);
+    }
 }

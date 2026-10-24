@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['defaultscale'] = 'Default staff size';
-$string['defaultscale_desc'] = 'The staff size used for scores that do not specify one.';
+$string['defaultscale_desc'] = 'The staff size used for scores that do not specify one. Authors can choose a size for each score in the text editor. A score is drawn at this size whatever its length; a score too wide for the page breaks onto more lines.';
 $string['editoracciddblflat'] = 'double flat';
 $string['editoracciddblsharp'] = 'double sharp';
 $string['editoraccidentals'] = 'Accidentals';
@@ -109,10 +109,12 @@ $string['editortie'] = 'Tie';
 $string['editortiedname'] = '{$a}, tied';
 $string['editortranspose'] = 'Transpose by semitones';
 $string['editorundo'] = 'Undo';
-$string['playback'] = 'Allow scores to be played';
-$string['playback_desc'] = 'Show a play button under every score, so readers can hear it. The sound is synthesised in the browser: nothing is downloaded and nothing is sent to a server.';
+$string['playback'] = 'Show a play button by default';
+$string['playback_desc'] = 'Show a play button under scores, so readers can hear them. This is the default: when authors may override it (below), a teacher can show or hide the button on each score in the text editor. The sound is synthesised in the browser: nothing is downloaded and nothing is sent to a server.';
 $string['playbackfailed'] = 'This score cannot be played.';
 $string['playbackgroup'] = 'Playback';
+$string['playbackoverride'] = 'Let authors override the default';
+$string['playbackoverride_desc'] = 'Let the person writing a score choose to show or hide its play button, whatever the default above. Turn this off to make the default apply to every score on the site, for example to keep playback off everywhere. Anyone who can use the text editor can set the choice, students included.';
 $string['playbackplay'] = 'Play';
 $string['playbackplaying'] = 'Playing';
 $string['playbackpreparing'] = 'Preparing the music';

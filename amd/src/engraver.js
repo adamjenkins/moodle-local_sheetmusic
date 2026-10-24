@@ -59,19 +59,68 @@ export const setEngineFactory = (factory) => {
 };
 
 /**
- * Staff sizes the site setting offers, as Verovio scale percentages.
+ * Staff sizes the site setting and the per-score token offer, as Verovio scale percentages.
+ *
+ * Verovio's staff is 720 units of a tenth of a millimetre at scale 100, and the outer viewBox it
+ * emits counts in CSS pixels at the chosen scale, so these give five-line staves about 29, 40 and
+ * 54 pixels tall - 1.8em, 2.5em and 3.4em against 16px body text. Before scores were given a
+ * width of their own (see sizeSvg()) they were stretched to fill their container, which made the
+ * scale almost invisible; these values were picked so that medium reads at the size a short
+ * exercise used to appear in a typical content column.
  *
  * @type {object}
  */
-const SCALES = {s: 30, m: 40, l: 55};
+const SCALES = {s: 40, m: 55, l: 75};
+
+/** @type {number} The font size, in CSS pixels, that an em of score width is reckoned against. */
+const PX_PER_EM = 16;
 
 /**
  * The engraver scale a stored staff-size token asks for.
  *
- * @param {string} token The token from the site setting: s, m or l.
+ * @param {string} token The token from the site setting or the score: s, m or l.
  * @returns {number} The Verovio scale percentage, defaulting to medium.
  */
 export const scaleFor = (token) => SCALES[token] || SCALES.m;
+
+/**
+ * The page width that makes a score break its lines to fit a container.
+ *
+ * Verovio's outer viewBox is the page width times the scale, in CSS pixels, so asking for this
+ * width means a long score wraps onto more systems instead of being shrunk to fit - and the
+ * notes stay the same size as every other score on the page.
+ *
+ * @param {number} widthPx The container's width in CSS pixels; 0 or less when it is not laid out.
+ * @param {number} scale The Verovio scale percentage the score is engraved at.
+ * @returns {object} {pageWidth}, or {} when there is no width to fit.
+ */
+export const fitOptions = (widthPx, scale) => {
+    if (!(widthPx > 0) || !(scale > 0)) {
+        return {};
+    }
+    // Verovio refuses page widths outside 100..100000.
+    return {pageWidth: Math.max(100, Math.min(100000, Math.floor(widthPx * 100 / scale)))};
+};
+
+/**
+ * Give an engraved SVG the size it was engraved at.
+ *
+ * Verovio is asked for viewBox output with no width or height, and an inline SVG without a width
+ * fills its container. That made a two-bar exercise and a sixteen-bar piece the same width on
+ * the page, with wildly different note sizes (tiny_sheetmusic issue #2). The width is set in em,
+ * so a score follows the size of the text around it; max-width in the stylesheet still lets a
+ * score shrink on a screen narrower than it.
+ *
+ * @param {Element|null} svg The outer engraved <svg> element.
+ * @returns {void}
+ */
+export const sizeSvg = (svg) => {
+    const box = svg && String(svg.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+    if (!box || box.length !== 4 || !(box[2] > 0)) {
+        return;
+    }
+    svg.style.width = `${(box[2] / PX_PER_EM).toFixed(3)}em`;
+};
 
 /**
  * Options applied to every render.
@@ -94,7 +143,10 @@ const DEFAULT_OPTIONS = {
     pageMarginLeft: 10,
     pageMarginRight: 10,
     pageMarginTop: 10,
-    scale: 40,
+    // Stated rather than left to Verovio's default, because the toolkit is reused between scores and
+    // a page width fitted to one container would otherwise carry over to the next score.
+    pageWidth: 2100,
+    scale: 55,
     svgHtml5: true,
     svgAdditionalAttribute: ['note@pname', 'note@oct', 'note@dur'],
     svgViewBox: true,

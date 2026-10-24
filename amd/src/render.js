@@ -25,7 +25,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {render as engrave, scaleFor} from 'local_sheetmusic/engraver';
+import {fitOptions, render as engrave, scaleFor, sizeSvg} from 'local_sheetmusic/engraver';
 import {MAX_SOURCE_BYTES} from 'local_sheetmusic/limits';
 import {attach as attachPlayback} from 'local_sheetmusic/playback';
 
@@ -85,9 +85,12 @@ export const hydrate = async(element) => {
         return;
     }
 
-    // The site's staff size, chosen by the admin and carried on the placeholder so that the
-    // client never has to ask the server for it.
-    const options = {scale: scaleFor(element.dataset.sheetmusicScale)};
+    // The staff size - the score's own if its author chose one, the site's otherwise - is resolved
+    // by the filter and carried on the placeholder, so the client never has to ask the server.
+    // The page width is fitted to the space the score has, so a long score wraps onto more
+    // systems rather than being shrunk to fit, and keeps the same note size as its neighbours.
+    const scale = scaleFor(element.dataset.sheetmusicScale);
+    const options = {scale, ...fitOptions(element.clientWidth, scale)};
 
     let svg;
     try {
@@ -112,6 +115,7 @@ export const hydrate = async(element) => {
     if (svgel) {
         svgel.setAttribute('aria-hidden', 'true');
         svgel.setAttribute('focusable', 'false');
+        sizeSvg(svgel);
     }
 
     // Keep the source in the accessibility tree rather than removing it from the page.
@@ -121,8 +125,9 @@ export const hydrate = async(element) => {
     }
     element.insertBefore(figure, element.firstChild);
 
-    // Playback is offered where the site allows it and the browser can produce sound. Nothing
-    // is loaded or built here: attaching adds a button, and the first press does the work.
+    // Playback is offered where the filter says so - the score's own choice, or the site's - and
+    // the browser can produce sound. Nothing is loaded or built here: attaching adds a button,
+    // and the first press does the work.
     if (element.dataset.sheetmusicPlay === '1') {
         await attachPlayback(element, {source, format, options});
     }

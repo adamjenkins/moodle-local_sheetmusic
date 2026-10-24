@@ -46,4 +46,11 @@ if ($hassiteconfig) {
         new lang_string('playback_desc', 'local_sheetmusic'),
         1
     ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'local_sheetmusic/playbackoverride',
+        new lang_string('playbackoverride', 'local_sheetmusic'),
+        new lang_string('playbackoverride_desc', 'local_sheetmusic'),
+        1
+    ));
 }

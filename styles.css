@@ -1,7 +1,8 @@
 /* Sizing for the engraved SVG and layout for the editing surface. */
 
 /* Verovio is asked for svgViewBox output, which has no intrinsic size, so every consumer of a
-   rendered score has to give it one (P0-FINDINGS-T2 decision 10). */
+   rendered score has to give it one (P0-FINDINGS-T2 decision 10). The renderer sets a width in
+   em from the viewBox (engraver sizeSvg()); max-width lets a score shrink on a narrow screen. */
 .sheetmusic-render svg,
 .sheetmusic-editor-preview svg {
     height: auto;
@@ -65,11 +66,11 @@
     padding: 0.5rem;
 }
 
-/* A Verovio SVG has a viewBox and no intrinsic size, so it shrinks to whatever box it is put
-   in. In a narrow modal that makes the notation too small to check, which is the one thing a
-   preview has to be good for, so it is given a floor and the pane scrolls instead. */
+/* The preview is given the width it was engraved at (engraver sizeSvg()), the same as on the
+   page, so the author checks the score at the size readers will see it. A score wider than the
+   pane scrolls rather than shrinking, because notation too small to check defeats a preview. */
 .sheetmusic-editor-preview svg {
-    min-width: 20rem;
+    max-width: none;
 }
 
 .sheetmusic-editor-legend {

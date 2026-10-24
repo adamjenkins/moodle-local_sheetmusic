@@ -46,6 +46,15 @@ final class display {
     /** @var string[] The staff sizes the setting offers. The client maps these to engraver scales. */
     public const SCALES = ['s', 'm', 'l'];
 
+    /** @var string Prefix of the stored class token that sets one score's staff size (RELATIONS.md A3). */
+    public const TOKEN_SCALE = 'sheetmusic-scale-';
+
+    /** @var string Stored class token asking for one score's play button to be shown. */
+    public const TOKEN_PLAY = 'sheetmusic-play';
+
+    /** @var string Stored class token asking for one score's play button to be hidden. */
+    public const TOKEN_NOPLAY = 'sheetmusic-noplay';
+
     /**
      * The staff size scores are engraved at on this site.
      *
@@ -71,14 +80,54 @@ final class display {
     }
 
     /**
+     * Whether a score's own play-button token may override the site default.
+     *
+     * Defaults to on for a site that has never visited the setting page, for the same reason as
+     * playback_enabled(). The setting exists because any user of the text editor can type a class
+     * token, students included, so it is the only way an admin can make "off" mean off.
+     *
+     * @return bool True if sheetmusic-play and sheetmusic-noplay are honoured.
+     */
+    public static function playback_overridable(): bool {
+        $value = get_config('local_sheetmusic', 'playbackoverride');
+        return $value === false || $value === null || (bool) $value;
+    }
+
+    /**
      * The data attributes a score placeholder carries so the client needs no round trip.
      *
+     * A score's own class tokens win over the site settings: `sheetmusic-scale-{s,m,l}` always,
+     * and `sheetmusic-play` / `sheetmusic-noplay` only while playback_overridable() allows it. If
+     * a score carries both play tokens, `sheetmusic-noplay` wins. Tokens that are not recognised
+     * are ignored, as RELATIONS.md section A3 requires.
+     *
+     * @param string[] $tokens The class tokens of the stored score, if the caller has them.
      * @return array Attribute name to value.
      */
-    public static function attributes(): array {
+    public static function attributes(array $tokens = []): array {
+        $scale = self::scale();
+        foreach ($tokens as $token) {
+            if (str_starts_with($token, self::TOKEN_SCALE)) {
+                $candidate = substr($token, strlen(self::TOKEN_SCALE));
+                if (in_array($candidate, self::SCALES, true)) {
+                    $scale = $candidate;
+                    break;
+                }
+            }
+        }
+
+        $play = self::playback_enabled();
+        if (self::playback_overridable()) {
+            if (in_array(self::TOKEN_NOPLAY, $tokens, true)) {
+                $play = false;
+            } else if (in_array(self::TOKEN_PLAY, $tokens, true)) {
+                $play = true;
+            }
+        }
+
         return [
-            'data-sheetmusic-scale' => self::scale(),
-            'data-sheetmusic-play' => self::playback_enabled() ? '1' : '0',
+            'data-sheetmusic-scale' => $scale,
+            'data-sheetmusic-play' => $play ? '1' : '0',
         ];
     }
 }

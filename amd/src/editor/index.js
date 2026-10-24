@@ -19,7 +19,7 @@
  * # The contract
  *
  * ```
- * open({source, format, container}) -> Promise<{source, format}|null>
+ * open({source, format, container, scale}) -> Promise<{source, format}|null>
  * ```
  *
  * `local_sheetmusic/editor` is one of the two modules consumers may depend on (RELATIONS.md
@@ -34,6 +34,7 @@
  * | `source` | no | The score to open, as text. Absent or empty opens an empty score. |
  * | `format` | no | The stored format token of `source`. Only `abc` is editable in v1. |
  * | `debounce` | no | Milliseconds of quiet typing before the preview re-engraves. |
+ * | `scale` | no | The staff-size token (`s`, `m` or `l`) the preview is engraved at. Defaults to medium. |
  *
  * **The editor renders into a container the caller passes; it does not return an element.**
  * That is the decision, and it is made this way because the caller owns the modal: Moodle's
@@ -74,7 +75,11 @@
  * Dispatching cancel after save, as the example does, is harmless: the promise settles once and
  * later events are ignored.
  *
- * A third event travels the other way. `local_sheetmusic/editor:preview` fires on the container
+ * The caller may also dispatch `local_sheetmusic/editor:display` on the container, with
+ * `detail.scale` set to a staff-size token, to re-engrave the preview at another size while the
+ * surface is open - which is how an authoring plugin's own size control is kept in step with it.
+ *
+ * A fourth event travels the other way. `local_sheetmusic/editor:preview` fires on the container
  * after every preview attempt, with `detail.error` set to a message or to `null`. Callers may
  * ignore it; the tests use it to know when an engraving has finished.
  *
@@ -104,6 +109,9 @@ export const EVENT_SAVE = 'local_sheetmusic/editor:save';
 
 /** @type {string} Dispatch this on the container to abandon the score. */
 export const EVENT_CANCEL = 'local_sheetmusic/editor:cancel';
+
+/** @type {string} Dispatch this on the container, with detail.scale, to change the preview's staff size. */
+export const EVENT_DISPLAY = 'local_sheetmusic/editor:display';
 
 export {EVENT_PREVIEW};
 
@@ -198,6 +206,7 @@ export const open = async(spec = {}) => {
         strings,
         source: spec.source || '',
         debounce: spec.debounce,
+        scale: spec.scale,
     });
 
     return new Promise((resolve) => {
@@ -209,6 +218,7 @@ export const open = async(spec = {}) => {
             settled = true;
             container.removeEventListener(EVENT_SAVE, onSave);
             container.removeEventListener(EVENT_CANCEL, onCancel);
+            container.removeEventListener(EVENT_DISPLAY, onDisplay);
             surface.destroy();
             resolve(value);
         };
@@ -241,7 +251,19 @@ export const open = async(spec = {}) => {
         function onCancel() {
             finish(null);
         }
+        /**
+         * Re-engrave the preview at the staff size the caller now asks for.
+         *
+         * @param {CustomEvent} event The display event.
+         * @returns {void}
+         */
+        function onDisplay(event) {
+            if (!settled && event.detail) {
+                surface.setScale(event.detail.scale).catch(() => null);
+            }
+        }
         container.addEventListener(EVENT_SAVE, onSave);
         container.addEventListener(EVENT_CANCEL, onCancel);
+        container.addEventListener(EVENT_DISPLAY, onDisplay);
     });
 };

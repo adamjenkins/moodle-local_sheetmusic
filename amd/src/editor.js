@@ -31,4 +31,4 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-export {open, setStrings, EVENT_CANCEL, EVENT_PREVIEW, EVENT_SAVE} from 'local_sheetmusic/editor/index';
+export {open, setStrings, EVENT_CANCEL, EVENT_DISPLAY, EVENT_PREVIEW, EVENT_SAVE} from 'local_sheetmusic/editor/index';

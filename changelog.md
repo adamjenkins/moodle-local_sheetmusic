@@ -3,6 +3,29 @@
 All notable changes to `local_sheetmusic` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-24
+
+### Added
+
+- Per-score display tokens honoured (RELATIONS.md §A3): `sheetmusic-scale-{s,m,l}`,
+  `sheetmusic-play`, `sheetmusic-noplay`. `display::attributes(array $tokens = [])` resolves them
+  over the site settings; noplay wins over play.
+- Setting `local_sheetmusic/playbackoverride` (default on) and `display::playback_overridable()`;
+  when off, the play tokens are ignored.
+- `local_sheetmusic/editor`: `open()` takes `scale`; new `EVENT_DISPLAY` event re-engraves the
+  preview at another staff size.
+
+### Changed
+
+- Rendered SVGs get an explicit width in em from their viewBox (`engraver.sizeSvg()`), so the
+  note size no longer depends on the score's length. The page width is fitted to the placeholder
+  (`engraver.fitOptions()`), so long scores wrap instead of shrinking.
+- Staff-size scales recalibrated for the fixed width: s/m/l = 40/55/75 (were 30/40/55). The default
+  `pageWidth` is now set explicitly, because the toolkit is reused between scores.
+- Editor preview: engraved at the chosen staff size with the same fixed width; the 20rem floor is
+  gone (the pane scrolls).
+- The `playback` setting is relabelled "Show a play button by default".
+
 ## [0.2.2] - 2026-10-04
 
 ### Changed

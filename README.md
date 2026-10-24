@@ -39,8 +39,17 @@ rather than a recorded instrument — enough to hear an exercise, check an inter
 line, and not a substitute for a real performance.
 
 Playback never starts on its own, only one score plays at a time, and a browser without Web Audio
-is shown no control rather than one that does nothing. Site administrators can turn it off for the
-whole site under *Site administration → Plugins → Local plugins → Sheet music*.
+is shown no control rather than one that does nothing.
+
+## Size and play button
+
+Every score is drawn at a fixed staff size (small, medium or large) whatever its length, so
+scores on the same page match. The size follows the page's text size, and a score too wide for
+the page breaks onto more lines. Under *Site administration → Plugins → Local plugins → Sheet
+music*, administrators choose the default staff size and whether scores show a play button by
+default. An author can override both for one score in the text editor (`tiny_sheetmusic`).
+*Let authors override the default* switches off the play-button override, for a site that wants
+playback off everywhere.
 
 ## Requirements
 

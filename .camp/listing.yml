@@ -9,8 +9,9 @@ description: |
   everywhere. It holds the document model, ABC and MusicXML serialisers, a MIDI
   importer, SVG/PNG/PDF/MIDI export, a single-staff note editor, and a bundled
   Verovio engraver, all running client-side. Playback is synthesised in the
-  browser with Web Audio, and site admins can set the default staff size or
-  turn playback off.
+  browser with Web Audio. Every score is drawn at a fixed staff size whatever
+  its length; site admins set the default size and play button, and can let
+  authors override both per score.
 labels:
   # Required disclosure labels — pick all that apply (RFC §4.7):
   #   fully-free | freemium | paid-service | external-account
@@ -24,7 +25,7 @@ screenshots:
   - path: .camp/screenshots/03-staff-editor.png
     caption: 'The note editor: click or type notes onto the staff; the status line reports the selected note.'
   - path: .camp/screenshots/04-admin-settings.png
-    caption: 'Administrator settings: default staff size and whether scores can be played.'
+    caption: 'Administrator settings: default staff size, default play button, and whether authors may override it.'
 links:
   docs: https://github.com/adamjenkins/moodle-local_sheetmusic#readme
   issues: https://github.com/adamjenkins/moodle-local_sheetmusic/issues

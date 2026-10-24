@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_sheetmusic';
-$plugin->version   = 2026100401;
+$plugin->version   = 2026102400;
 $plugin->requires  = 2024100700;
 $plugin->supported = [405, 503];
 $plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '0.2.2';
+$plugin->release   = '0.3.0';

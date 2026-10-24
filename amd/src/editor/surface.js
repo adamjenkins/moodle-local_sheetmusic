@@ -45,7 +45,7 @@
 
 import {ensureParser, fromAbc} from 'local_sheetmusic/abc';
 import {attach as attachPlayback, stopAll as stopPlayback} from 'local_sheetmusic/playback';
-import {render as engrave} from 'local_sheetmusic/engraver';
+import {render as engrave, scaleFor, sizeSvg} from 'local_sheetmusic/engraver';
 import {EXPORTS} from 'local_sheetmusic/export';
 import {ACCEPT, importBytes, readFile} from 'local_sheetmusic/editor/importing';
 import {buildMidiPanel} from 'local_sheetmusic/editor/midipanel';
@@ -65,8 +65,8 @@ let sequence = 0;
 /**
  * Build the editing surface inside a container.
  *
- * @param {object} spec {container, source, strings, debounce}.
- * @returns {object} The surface's controls: source(), validate(), destroy().
+ * @param {object} spec {container, source, strings, debounce, scale}.
+ * @returns {object} The surface's controls: source(), validate(), setScale(), destroy().
  */
 export const createSurface = (spec) => {
     const {container, strings} = spec;
@@ -117,7 +117,7 @@ export const createSurface = (spec) => {
     ]);
 
     const state = {error: null, timer: null, token: 0, imported: null, previous: '', synced: null,
-        tab: 'notes', playback: null};
+        tab: 'notes', playback: null, scale: scaleFor(spec.scale)};
 
     /**
      * Show a message in the surface, or clear it.
@@ -171,7 +171,10 @@ export const createSurface = (spec) => {
         try {
             // Setting xmlIdChecksum keeps element ids stable between keystrokes, which is what the
             // note-entry pane's hit-testing needs (P0-FINDINGS-T2 decision 6).
-            const {svg} = await engrave(textarea.value, 'abc', {xmlIdChecksum: true});
+            // The preview is engraved at the staff size the score will be shown at, and given the
+            // same fixed width as on the page, so the author sees the size readers will see.
+            const options = {xmlIdChecksum: true, scale: state.scale};
+            const {svg} = await engrave(textarea.value, 'abc', options);
             if (token !== state.token) {
                 return;
             }
@@ -180,13 +183,14 @@ export const createSurface = (spec) => {
             if (engraved) {
                 engraved.setAttribute('aria-hidden', 'true');
                 engraved.setAttribute('focusable', 'false');
+                sizeSvg(engraved);
             }
             state.error = null;
             say(null);
             const attached = await attachPlayback(previewPane, {
                 source: textarea.value,
                 format: 'abc',
-                options: {xmlIdChecksum: true},
+                options,
                 figure: preview,
             });
             if (token === state.token) {
@@ -379,6 +383,22 @@ export const createSurface = (spec) => {
             window.clearTimeout(state.timer);
             await draw();
             return state.error;
+        },
+
+        /**
+         * Show the preview at another staff size.
+         *
+         * @param {string} token A staff-size token: s, m or l. Anything else means medium.
+         * @returns {Promise<void>}
+         */
+        setScale: async(token) => {
+            const scale = scaleFor(token);
+            if (scale === state.scale) {
+                return;
+            }
+            state.scale = scale;
+            window.clearTimeout(state.timer);
+            await draw();
         },
 
         /**
